@@ -1,0 +1,1833 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>두근두근 환웅전 미연시</title>
+  <style>
+    :root{
+      --ui:#0b0f18;
+      --ui2:#121a2a;
+      --line:rgba(255,255,255,.10);
+      --text:#f2f6ff;
+      --muted:rgba(242,246,255,.72);
+      --accent:#ffc36a;
+
+      --boxH: 300px; /* 대화창 높이 */
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; background:#000; color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+      overflow:hidden;
+    }
+
+    /* ====== 스테이지 ====== */
+    .stage{
+      position:relative;
+      width:100vw; height:100vh;
+      background:#05070c;
+    }
+
+    .bg{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      filter: saturate(1.05) contrast(1.02);
+      transform: scale(1.02);
+    }
+    .vignette{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(1200px 700px at 50% 40%, rgba(0,0,0,.0), rgba(0,0,0,.55)),
+        linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55));
+      pointer-events:none;
+    }
+
+    /* 캐릭터 슬롯 */
+    .chars{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items:end;
+      padding: 0 4vw calc(var(--boxH) - 24px) 4vw;
+      pointer-events:none;
+    }
+    .slot{
+      position:relative;
+      height: 100%;
+      display:flex;
+      justify-content:center;
+      align-items:flex-end;
+    }
+    .char{
+      max-height: 88vh;
+      width:auto;
+      max-width: 110%;
+      object-fit:contain;
+      filter: drop-shadow(0 25px 40px rgba(0,0,0,.55));
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      transition: opacity .18s ease, transform .18s ease, filter .18s ease;
+    }
+    .char.show{
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .char.dim{ opacity:.55; filter: drop-shadow(0 18px 30px rgba(0,0,0,.45)) saturate(.85); }
+    .char.focus{ opacity:1; filter: drop-shadow(0 26px 46px rgba(0,0,0,.65)) saturate(1.05); }
+
+    /* ====== 상단 HUD ====== */
+    .hud{
+      position:absolute; top:18px; left:18px; right:18px;
+      display:flex; justify-content:space-between; gap:12px;
+      pointer-events:auto;
+      z-index:10;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pill b{ color:var(--text); }
+    .hudLeft, .hudRight{ display:flex; gap:10px; flex-wrap:wrap; }
+
+    .btn{
+      cursor:pointer;
+      user-select:none;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(10,14,25,.55);
+      color: var(--text);
+      backdrop-filter: blur(8px);
+      transition: transform .12s ease, background .12s ease;
+      font-size: 13px;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(18,26,44,.62); }
+    .btn:active{ transform: translateY(0); }
+
+    /* ===== 대화창 래퍼 ===== */
+    .dialogueWrap{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height: var(--boxH);
+      z-index:20;
+      pointer-events:auto;
+    }
+
+    /* 대화창 위 컨트롤 바 */
+    .controlsRow{
+      margin: 0 5vw 10px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      align-items:center;
+      pointer-events:auto;
+      z-index:21;
+    }
+
+    .dialogue{
+      height: calc(100% - 44px);
+      margin: 0 5vw 4.2vh;
+      background: linear-gradient(180deg, rgba(8,10,16,.35), rgba(8,10,16,.75));
+      border:1px solid var(--line);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      display:grid;
+      grid-template-rows: auto 1fr;
+      overflow:hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,.45);
+    }
+    .nameplate{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+    .nameplate .name{
+      display:inline-flex; align-items:center; gap:10px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .nameplate .tag{
+      font-size:12px; color: var(--muted);
+      border:1px solid rgba(255,255,255,.10);
+      padding:6px 10px; border-radius:999px;
+      background: rgba(0,0,0,.18);
+    }
+    .textArea{
+      padding: 14px;
+      font-size: 18px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .footerRow{
+      display:flex; justify-content:space-between; align-items:center;
+      padding: 0 5vw 2.2vh;
+      color: var(--muted);
+      font-size: 12px;
+      gap: 10px;
+      z-index:21;
+      pointer-events:auto;
+    }
+
+    /* ====== 모달 공통 ====== */
+    .modal{
+      position:absolute; inset:0;
+      background: rgba(0,0,0,.62);
+      display:none;
+      place-items:center;
+      z-index:80; /* 타이틀(60)보다 위 */
+    }
+    .modal.open{ display:grid; }
+
+    .modalBox{
+      width:min(920px, 96vw);
+      height:min(78vh, 720px);
+      background: rgba(12,16,26,.92);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      overflow:hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,.55);
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    /* ✅ 사진첩 창만 “조금 더 크게” */
+    .modalBox.galleryBox{
+      width:min(1080px, 98vw);
+      height:min(86vh, 860px);
+    }
+
+    .modalHead, .modalFoot{
+      padding: 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex; justify-content:space-between; align-items:center;
+      color: var(--muted);
+      gap:10px;
+    }
+    .modalFoot{ border-bottom:0; border-top:1px solid rgba(255,255,255,.08); }
+
+    .modalHeadLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .modalHeadRight{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .modalBody{
+      padding: 14px;
+      overflow:auto;
+      display:grid;
+      gap: 10px;
+    }
+    .logLine{
+      padding: 12px 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(0,0,0,.18);
+    }
+    .logLine .who{ font-weight:800; margin-bottom:6px; }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; color: var(--muted); }
+
+    /* ====== Shake ====== */
+    @keyframes shake {
+      0%{ transform: translate(0,0) }
+      15%{ transform: translate(-6px, 2px) }
+      30%{ transform: translate(5px, -3px) }
+      45%{ transform: translate(-4px, -2px) }
+      60%{ transform: translate(4px, 3px) }
+      75%{ transform: translate(-2px, 1px) }
+      100%{ transform: translate(0,0) }
+    }
+    .shake{ animation: shake .28s ease; }
+
+    /* ===== 중앙 선택지 오버레이 ===== */
+    .choiceOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      place-items:center;
+      z-index:40;
+      pointer-events:auto;
+    }
+    .choiceOverlay.open{ display:grid; }
+    .choiceOverlay::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(2px);
+    }
+    .choicePanel{
+      position:relative;
+      width:min(720px, 92vw);
+      display:grid;
+      gap:12px;
+      padding: 16px;
+    }
+    .midChoice{
+      width:100%;
+      text-align:left;
+      padding:16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(12,16,26,.72);
+      color:var(--text);
+      font-size:16px;
+      cursor:pointer;
+    }
+    .midChoice:hover{ background: rgba(18,26,44,.75); }
+
+    /* ===== Title Screen ===== */
+    .titleScreen{
+      position:absolute; inset:0;
+      display:none;
+      z-index:60;
+      pointer-events:auto;
+    }
+    .titleScreen.open{ display:block; }
+
+    .titleBg{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      transform: scale(1.02);
+      filter: saturate(1.02) contrast(1.02);
+    }
+    .titleMenu{
+      position:absolute;
+      left: 4.2vw;
+      bottom: 4.2vh;
+      display:grid;
+      gap:10px;
+      width: min(320px, 86vw);
+    }
+    .titleLogo{ margin-bottom: 10px; }
+    .titleName{ font-size: 26px; font-weight: 900; letter-spacing: .2px; }
+    .titleSub{ margin-top: 6px; color: rgba(242,246,255,.72); font-size: 13px; }
+
+    .titleBtn{
+      text-align:left;
+      padding: 14px 14px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(12,16,26,.72);
+      color: var(--text);
+      cursor:pointer;
+      backdrop-filter: blur(10px);
+      transition: transform .12s ease, background .12s ease;
+      font-size: 15px;
+    }
+    .titleBtn:hover{ transform: translateY(-1px); background: rgba(18,26,44,.78); }
+    .titleBtn.ghost{ background: rgba(0,0,0,.35); color: rgba(242,246,255,.72); }
+
+    /* ===== Gallery Grid: 2x2 (4장씩) ===== */
+    .galleryGrid2x2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .cgThumb{
+      position:relative;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(0,0,0,.18);
+      cursor:pointer;
+      min-height: 220px;
+    }
+    .cgThumb img{
+      width:100%;
+      height:170px;
+      object-fit:cover;
+      display:block;
+      filter: saturate(1.02);
+      transition: filter .15s ease, opacity .15s ease;
+    }
+
+    /* 잠금 CG: 실루엣/뿌연 미리보기 */
+    .cgThumb.locked img{
+      filter: blur(8px) grayscale(1) brightness(.25) contrast(.9);
+      opacity: .9;
+    }
+    .cgThumb.locked::after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 280px at 50% 25%, rgba(0,0,0,.08), rgba(0,0,0,.78));
+      pointer-events:none;
+    }
+
+    .cgThumb .cgLabel{
+      padding: 10px 10px 8px;
+      color: rgba(242,246,255,.9);
+      font-size: 12px;
+      font-weight: 800;
+      position:relative;
+      z-index:1;
+    }
+    .cgThumb .cgDesc{
+      padding: 0 10px 12px;
+      color: rgba(242,246,255,.62);
+      font-size: 12px;
+      line-height: 1.4;
+      min-height: 2.8em;
+      position:relative;
+      z-index:1;
+    }
+    .cgLock{
+      position:absolute; inset:0;
+      display:grid;
+      place-items:center;
+      background: rgba(10,10,10,.18); /* 완전 가리지 않음 */
+      color: rgba(242,246,255,.82);
+      text-align:center;
+      padding: 12px;
+      font-size: 13px;
+      z-index:2;
+    }
+
+    .galleryFoot{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      width:100%;
+    }
+    .galleryRight{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-left:auto;
+    }
+
+    .tinyBtn{
+      cursor:pointer;
+      user-select:none;
+      padding:8px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,14,25,.55);
+      color: var(--text);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+    }
+    .tinyBtn:hover{ background: rgba(18,26,44,.62); }
+
+    /* ===== CG Viewer (확대 보기) ===== */
+    .viewerBox{
+      width: min(1020px, 98vw);
+      height: min(82vh, 780px);
+      background: rgba(12,16,26,.92);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      overflow:hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,.55);
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    .viewerBody{
+      position:relative;
+      display:grid;
+      place-items:center;
+      padding: 10px;
+    }
+    .viewerImgWrap{
+      position:relative;
+      width: min(920px, 94vw);
+      height: min(60vh, 560px);
+      border-radius: 16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      display:grid;
+      place-items:center;
+    }
+    .viewerImgWrap img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      transition: filter .15s ease, opacity .15s ease;
+    }
+
+    /* ✅ 확대보기에서도 잠김이면 “더 흐리게/더 검게” */
+    .viewerImgWrap.locked img{
+      filter: blur(14px) grayscale(1) brightness(.18) contrast(.95);
+      opacity: .95;
+    }
+    .viewerImgWrap.locked::after{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(900px 520px at 50% 35%, rgba(0,0,0,.10), rgba(0,0,0,.78));
+      pointer-events:none;
+    }
+
+    .viewerLock{
+      position:absolute; inset:0;
+      display:grid;
+      place-items:center;
+      background: rgba(10,10,10,.18); /* ✅ 완전히 안 가리되 */
+      color: rgba(242,246,255,.80);
+      text-align:center;
+      padding: 14px;
+      font-size: 14px;
+      z-index:2;
+    }
+
+    /* ✅ 뷰어 하단: 중앙에 1/14, 우측하단에 넘기기 */
+    .viewerFoot{
+      position:relative;
+      padding: 12px 14px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color: var(--muted);
+      min-height: 54px;
+    }
+    .viewerCounterCenter{
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: rgba(242,246,255,.72);
+      pointer-events:none;
+    }
+    .viewerMetaLeft{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .viewerMetaLeft #viewerTitle{
+      font-weight:800;
+      color: rgba(242,246,255,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 52vw;
+    }
+    .viewerMetaLeft #viewerDesc{
+      color: rgba(242,246,255,.62);
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 52vw;
+    }
+    .viewerNavRight{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .tri{
+      cursor:pointer;
+      user-select:none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+    }
+    .tri:hover{ background: rgba(18,26,44,.55); }
+
+    /* 모바일 */
+    @media (max-width: 720px){
+      :root{ --boxH: 240px; }
+      .textArea{ font-size: 16px; }
+      .chars{ padding: 0 2vw calc(var(--boxH) - 30px) 2vw; }
+      .cgThumb{ min-height: 190px; }
+      .cgThumb img{ height: 130px; }
+      .viewerMetaLeft #viewerTitle, .viewerMetaLeft #viewerDesc{ max-width: 44vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <img class="bg" id="bgImg" alt="background" />
+    <div class="vignette"></div>
+
+    <!-- Title Screen -->
+    <div class="titleScreen open" id="titleScreen" aria-hidden="false">
+      <img class="titleBg" id="titleBg" alt="title background" />
+
+      <div class="titleMenu">
+        <div class="titleLogo">
+          <div class="titleName">두근두근 환웅전</div>
+          <div class="titleSub">21일 안에 반려자를 선택하라</div>
+        </div>
+
+        <button class="titleBtn" id="btnStart">시작하기</button>
+        <button class="titleBtn" id="btnContinue">불러오기</button>
+        <button class="titleBtn" id="btnGalleryTitle">사진첩</button>
+        <button class="titleBtn ghost" id="btnQuit">그냥 닫기</button>
+      </div>
+    </div>
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hudLeft">
+        <div class="pill">DAY <b id="day">1</b> / 21</div>
+      </div>
+      <div class="hudRight">
+        <div class="pill">BGM <b id="bgmState">OFF</b></div>
+        <div class="btn" id="btnBgm">BGM (M)</div>
+        <div class="btn" id="btnTitle">TITLE</div>
+      </div>
+    </div>
+
+    <!-- Characters -->
+    <div class="chars">
+      <div class="slot"><img class="char" id="charL" alt="left char" /></div>
+      <div class="slot"><img class="char" id="charC" alt="center char" /></div>
+      <div class="slot"><img class="char" id="charR" alt="right char" /></div>
+    </div>
+
+    <!-- Choices Overlay -->
+    <div class="choiceOverlay" id="choiceOverlay" aria-hidden="true">
+      <div class="choicePanel" id="choicePanel"></div>
+    </div>
+
+    <!-- Dialogue -->
+    <div class="dialogueWrap">
+      <div class="controlsRow" id="controlsRow">
+        <div class="pill">AUTO <b id="autoState">OFF</b></div>
+        <div class="btn" id="btnAuto">Auto (A)</div>
+        <div class="btn" id="btnBacklog">Backlog (B)</div>
+        <div class="btn" id="btnSave">Save</div>
+        <div class="btn" id="btnLoad">Load</div>
+      </div>
+
+      <div class="dialogue" id="dialogueBox">
+        <div class="nameplate">
+          <div class="name"><span id="speaker">SYSTEM</span></div>
+          <div class="tag" id="sceneTag">Scene: -</div>
+        </div>
+        <div class="textArea" id="text"></div>
+      </div>
+
+      <div class="footerRow">
+        <div class="kbd">Space=다음 · 1~3=선택 · A=오토 · B=백로그 · M=BGM · ←/→=CG 넘기기</div>
+        <div class="btn" id="btnNext">Next (Space)</div>
+      </div>
+    </div>
+
+    <!-- Backlog Modal -->
+    <div class="modal" id="modal">
+      <div class="modalBox">
+        <div class="modalHead">
+          <div class="modalHeadLeft">
+            <div><b>백로그</b> <span class="kbd">Esc=닫기</span></div>
+          </div>
+          <div class="modalHeadRight">
+            <div class="btn" id="btnClose">Close</div>
+          </div>
+        </div>
+        <div class="modalBody" id="modalBody"></div>
+        <div class="modalFoot">
+          <div class="kbd">선택지도 기록됨</div>
+          <div class="btn" id="btnClearLog">Clear</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div class="modal" id="galleryModal">
+      <div class="modalBox galleryBox">
+        <div class="modalHead">
+          <div class="modalHeadLeft">
+            <div><b>사진첩</b> <span class="kbd">Esc=닫기</span></div>
+          </div>
+          <div class="modalHeadRight">
+            <!-- ✅ Clear 대신: 전체해금 버튼을 상단(닫기 왼쪽)에 -->
+            <div class="btn" id="btnUnlockAll">전체해금</div>
+            <div class="btn" id="btnGalleryClose">Close</div>
+          </div>
+        </div>
+
+        <div class="modalBody" id="galleryBody"></div>
+
+        <div class="modalFoot">
+          <div class="galleryFoot">
+            <div class="kbd">assets.cg에 등록된 CG가 목록에 표시됩니다</div>
+
+            <!-- ✅ 페이지 표시 + 넘기기: 우측하단 -->
+            <div class="galleryRight">
+              <div class="tinyBtn" id="btnPrevPage">◁ 페이지</div>
+              <div class="kbd" id="pageInfo">1 / 1</div>
+              <div class="tinyBtn" id="btnNextPage">페이지 ▷</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CG Viewer Modal -->
+    <div class="modal" id="cgViewerModal">
+      <div class="viewerBox">
+        <div class="modalHead">
+          <div class="modalHeadLeft">
+            <div><b>CG</b> <span class="kbd">Esc=닫기 · ←/→=넘기기</span></div>
+          </div>
+          <div class="modalHeadRight">
+            <div class="btn" id="btnViewerClose">Close</div>
+          </div>
+        </div>
+
+        <div class="viewerBody">
+          <div class="viewerImgWrap" id="viewerImgWrap">
+            <img id="viewerImg" alt="cg viewer" />
+            <div class="viewerLock" id="viewerLock" style="display:none;">아직 해금되지 않았습니다.</div>
+          </div>
+        </div>
+
+        <!-- ✅ 하단: 중앙정렬 카운터 + 우측하단 넘기기 -->
+        <div class="viewerFoot">
+          <div class="viewerMetaLeft">
+            <div id="viewerTitle">-</div>
+            <div id="viewerDesc">-</div>
+          </div>
+
+          <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
+
+          <div class="viewerNavRight">
+            <span class="tri" id="btnCgPrev">◁</span>
+            <span class="kbd">(CG)</span>
+            <span class="tri" id="btnCgNext">▷</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================================
+  0) Assets / Names
+============================================================================ */
+var assets = {
+  bg: {
+    title: "assets/bg/title.png",
+    forestsunset: "assets/bg/forest_sunset.png",
+    forestday: "assets/bg/forest_day.png",
+    caveday: "assets/bg/cave_day.png",
+    cavenight: "assets/bg/cave_night.png",
+    palace: "assets/bg/palace.png"
+  },
+
+  /* CG는 assets.cg 기준 */
+  cg: {
+    cg_00: "assets/cg/intro_01.png",
+	cg_01: "assets/cg/서연.png",
+	cg_02: "assets/cg/우정.png",
+	cg_03: "assets/cg/호린.png",
+	cg_04: "assets/cg/묘묘.png",
+	cg_05: "assets/cg/유진.png",
+	cg_06: "assets/cg/설아.png",
+	cg_07: "assets/cg/마리.png",
+	cg_08: "assets/cg/미연.png",
+	cg_09: "assets/cg/지원.png",
+	cg_10: "assets/cg/유채.png",
+	cg_11: "assets/cg/수윤.png",
+	cg_12: "assets/cg/복희.png",
+	cg_13: "assets/cg/웅혜.png"
+  },
+
+  char: {
+    bear_neutral: "assets/char/bear_neutral.png",
+    bear_smile:   "assets/char/bear_smile.png",
+    bear_angry:   "assets/char/bear_angry.png",
+
+    tiger_neutral:"assets/char/tiger_neutral.png",
+    tiger_smile:  "assets/char/tiger_smile.png",
+    tiger_angry:  "assets/char/tiger_angry.png"
+  },
+
+  bgm: { main: "assets/audio/bgm.mp3" },
+  sfx: {
+    click:  "assets/audio/sfx_click.wav",
+    choice: "assets/audio/sfx_choice.wav",
+    shake:  "assets/audio/sfx_shake.wav"
+  }
+};
+
+var cgMeta = {
+  // "cg_intro_01": { title: "프롤로그", desc: "낯선 숲에서 눈을 뜬 환웅." }
+};
+
+var names = {
+  system: "SYSTEM",
+  hwanung: "환웅",
+  bear: "웅혜",
+  tiger: "호린"
+};
+
+/* ============================================================================
+  1) State / Storage
+============================================================================ */
+var STORAGE_KEY = "hwanung_vn_save_v4";
+
+var state = {
+  day: 1,
+  maxDay: 21,
+  partnerLocked: null,
+  vars: { affBear: 0, affTiger: 0 },
+  script: null,
+  scene: "forestday",
+  slots: { L:null, C:null, R:null },
+  backlog: [],
+  gallery: { unlockedCg: [] }
+};
+
+/* ============================================================================
+  2) DOM refs
+============================================================================ */
+var $stage = document.getElementById("stage");
+var $bgImg = document.getElementById("bgImg");
+var $charL = document.getElementById("charL");
+var $charC = document.getElementById("charC");
+var $charR = document.getElementById("charR");
+
+var $dialogueBox = document.getElementById("dialogueBox");
+var $speaker = document.getElementById("speaker");
+var $sceneTag = document.getElementById("sceneTag");
+var $text = document.getElementById("text");
+
+var $day = document.getElementById("day");
+var $autoState = document.getElementById("autoState");
+var $bgmState = document.getElementById("bgmState");
+
+var $btnNext = document.getElementById("btnNext");
+var $btnAuto = document.getElementById("btnAuto");
+var $btnBacklog = document.getElementById("btnBacklog");
+var $btnSave = document.getElementById("btnSave");
+var $btnLoad = document.getElementById("btnLoad");
+var $btnBgm = document.getElementById("btnBgm");
+var $btnTitle = document.getElementById("btnTitle");
+
+var $modal = document.getElementById("modal");
+var $modalBody = document.getElementById("modalBody");
+var $btnClose = document.getElementById("btnClose");
+var $btnClearLog = document.getElementById("btnClearLog");
+
+var $choiceOverlay = document.getElementById("choiceOverlay");
+var $choicePanel = document.getElementById("choicePanel");
+
+var $titleScreen = document.getElementById("titleScreen");
+var $titleBg = document.getElementById("titleBg");
+var $btnStart = document.getElementById("btnStart");
+var $btnContinue = document.getElementById("btnContinue");
+var $btnGalleryTitle = document.getElementById("btnGalleryTitle");
+var $btnQuit = document.getElementById("btnQuit");
+
+var $galleryModal = document.getElementById("galleryModal");
+var $galleryBody  = document.getElementById("galleryBody");
+var $btnGalleryClose = document.getElementById("btnGalleryClose");
+var $btnUnlockAll = document.getElementById("btnUnlockAll");
+var $btnPrevPage = document.getElementById("btnPrevPage");
+var $btnNextPage = document.getElementById("btnNextPage");
+var $pageInfo = document.getElementById("pageInfo");
+
+var $cgViewerModal = document.getElementById("cgViewerModal");
+var $btnViewerClose = document.getElementById("btnViewerClose");
+var $viewerImgWrap = document.getElementById("viewerImgWrap");
+var $viewerImg = document.getElementById("viewerImg");
+var $viewerLock = document.getElementById("viewerLock");
+var $btnCgPrev = document.getElementById("btnCgPrev");
+var $btnCgNext = document.getElementById("btnCgNext");
+var $viewerCounter = document.getElementById("viewerCounter");
+var $viewerTitle = document.getElementById("viewerTitle");
+var $viewerDesc = document.getElementById("viewerDesc");
+
+/* ============================================================================
+  3) Audio
+============================================================================ */
+var bgm = new Audio();
+bgm.loop = true;
+bgm.volume = 0.55;
+
+var sfx = {
+  click: new Audio(),
+  choice: new Audio(),
+  shake: new Audio()
+};
+try{
+  sfx.click.volume = 0.85;
+  sfx.choice.volume = 0.85;
+  sfx.shake.volume = 0.85;
+}catch(e){}
+
+function applyAudio(){
+  if(assets.bgm && assets.bgm.main) bgm.src = assets.bgm.main;
+  if(assets.sfx && assets.sfx.click) sfx.click.src = assets.sfx.click;
+  if(assets.sfx && assets.sfx.choice) sfx.choice.src = assets.sfx.choice;
+  if(assets.sfx && assets.sfx.shake) sfx.shake.src = assets.sfx.shake;
+}
+function playSfx(name){
+  var a = sfx[name];
+  if(!a || !a.src) return;
+  try{ a.currentTime = 0; a.play(); }catch(e){}
+}
+function updateBgmUI(){
+  $bgmState.textContent = bgm.paused ? "OFF" : "ON";
+}
+function toggleBgm(){
+  if(!bgm.src){
+    toast("BGM 경로가 비어있어요. assets.bgm.main 설정!");
+    return;
+  }
+  try{
+    if(bgm.paused) bgm.play();
+    else bgm.pause();
+  }catch(e){}
+  updateBgmUI();
+}
+
+/* ============================================================================
+  4) Auto
+============================================================================ */
+var autoEnabled = false;
+var autoTimer = null;
+var AUTO_DELAY = 1050;
+
+function updateAutoUI(){
+  $autoState.textContent = autoEnabled ? "ON" : "OFF";
+}
+function setAuto(on){
+  autoEnabled = !!on;
+  updateAutoUI();
+  if(autoTimer) clearTimeout(autoTimer);
+  autoTimer = null;
+  if(autoEnabled) scheduleAuto();
+}
+function scheduleAuto(){
+  if(autoTimer) clearTimeout(autoTimer);
+  if(!autoEnabled) return;
+  if(choicesOpen()) return;
+  if($modal.classList.contains("open")) return;
+  if($galleryModal.classList.contains("open")) return;
+  if($cgViewerModal.classList.contains("open")) return;
+  if($titleScreen.classList.contains("open")) return;
+
+  autoTimer = setTimeout(function(){ next(); }, AUTO_DELAY);
+}
+
+/* ============================================================================
+  5) UI Helpers
+============================================================================ */
+function shakeUI(){
+  $dialogueBox.classList.remove("shake");
+  void $dialogueBox.offsetWidth;
+  $dialogueBox.classList.add("shake");
+  playSfx("shake");
+}
+function shakeStage(){
+  $stage.classList.remove("shake");
+  void $stage.offsetWidth;
+  $stage.classList.add("shake");
+  playSfx("shake");
+}
+
+var toastTimer = null;
+function toast(msg){
+  var el = document.getElementById("toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    el.style.position = "absolute";
+    el.style.left = "50%";
+    el.style.top = "18px";
+    el.style.transform = "translateX(-50%)";
+    el.style.padding = "10px 12px";
+    el.style.borderRadius = "14px";
+    el.style.border = "1px solid rgba(255,255,255,.12)";
+    el.style.background = "rgba(0,0,0,.55)";
+    el.style.color = "white";
+    el.style.backdropFilter = "blur(8px)";
+    el.style.fontSize = "13px";
+    el.style.opacity = "0";
+    el.style.transition = "opacity .15s";
+    el.style.zIndex = "999";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = "1";
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.style.opacity = "0"; }, 1100);
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* Backlog */
+function pushBacklog(who, text){
+  if(!Array.isArray(state.backlog)) state.backlog = [];
+  state.backlog.push({ who: who, text: text });
+}
+function renderBacklog(){
+  $modalBody.innerHTML = "";
+  if(!Array.isArray(state.backlog) || state.backlog.length === 0){
+    $modalBody.innerHTML = '<div class="kbd">아직 기록이 없어요.</div>';
+    return;
+  }
+  for(var i=0;i<state.backlog.length;i++){
+    var e = state.backlog[i];
+    var div = document.createElement("div");
+    div.className = "logLine";
+    div.innerHTML =
+      '<div class="who">' + escapeHtml(e.who) + '</div>' +
+      '<div>' + escapeHtml(e.text).replace(/\n/g, "<br>") + '</div>';
+    $modalBody.appendChild(div);
+  }
+  $modalBody.scrollTop = $modalBody.scrollHeight;
+}
+function openBacklog(){ renderBacklog(); $modal.classList.add("open"); }
+function closeBacklog(){ $modal.classList.remove("open"); }
+
+/* ============================================================================
+  6) Title Screen
+============================================================================ */
+function showTitle(){
+  $titleScreen.classList.add("open");
+  $titleScreen.setAttribute("aria-hidden","false");
+  var src = assets.bg.title || assets.bg.forestday || "";
+  $titleBg.src = src;
+}
+function hideTitle(){
+  $titleScreen.classList.remove("open");
+  $titleScreen.setAttribute("aria-hidden","true");
+}
+
+/* ============================================================================
+  7) Background / Slots / Gallery unlock
+============================================================================ */
+function ensureGallery(){
+  if(!state.gallery || typeof state.gallery !== "object") state.gallery = {};
+  if(!Array.isArray(state.gallery.unlockedCg)) state.gallery.unlockedCg = [];
+}
+
+function buildCgKeyList(){
+  cgAllKeys = [];
+  if(!assets.cg) assets.cg = {};
+  for(var k in assets.cg){
+    if(!assets.cg.hasOwnProperty(k)) continue;
+    cgAllKeys.push(String(k));
+  }
+  cgAllKeys.sort();
+}
+
+function unlockCg(key){
+  if(!key) return;
+  ensureGallery();
+  var s = String(key);
+  if(state.gallery.unlockedCg.indexOf(s) === -1){
+    state.gallery.unlockedCg.push(s);
+  }
+}
+
+function unlockAllCgs(){
+  ensureGallery();
+  buildCgKeyList();
+  for(var i=0;i<cgAllKeys.length;i++){
+    if(state.gallery.unlockedCg.indexOf(cgAllKeys[i]) === -1){
+      state.gallery.unlockedCg.push(cgAllKeys[i]);
+    }
+  }
+  toast("전체 CG 해금!");
+  if($galleryModal.classList.contains("open")) renderGalleryPage();
+  if($cgViewerModal.classList.contains("open")) renderCgViewer();
+}
+
+function setBackground(key){
+  state.scene = key;
+  var src = (assets.bg && assets.bg[key]) ? assets.bg[key] : "";
+  if(src){
+    $bgImg.src = src;
+    $bgImg.style.display = "block";
+  }else{
+    $bgImg.removeAttribute("src");
+    $bgImg.style.display = "none";
+  }
+  $sceneTag.textContent = "Scene: " + key;
+}
+
+function applySlots(slots, speakingWho){
+  state.slots = slots;
+
+  var map = { L:$charL, C:$charC, R:$charR };
+  var posList = ["L","C","R"];
+  for(var i=0;i<posList.length;i++){
+    var pos = posList[i];
+    var el = map[pos];
+    var info = slots[pos];
+    if(!info){
+      el.className = "char";
+      el.style.display = "none";
+      el.removeAttribute("src");
+      continue;
+    }
+    var src = (assets.char && assets.char[info.key]) ? assets.char[info.key] : "";
+    el.style.display = "block";
+    if(src) el.src = src;
+    else el.removeAttribute("src");
+    el.className = "char show";
+  }
+
+  var all = [
+    { el:$charL, info:slots.L },
+    { el:$charC, info:slots.C },
+    { el:$charR, info:slots.R }
+  ];
+  for(var j=0;j<all.length;j++){
+    var item = all[j];
+    if(!item.info) continue;
+    item.el.classList.remove("dim","focus");
+    if(speakingWho && item.info.who !== speakingWho){
+      item.el.classList.add("dim");
+    }else if(speakingWho && item.info.who === speakingWho){
+      item.el.classList.add("focus");
+    }
+  }
+}
+
+/* ============================================================================
+  8) Script system
+============================================================================ */
+function startScript(lines, afterChoicesFn){
+  state.script = { lines: lines, index: 0, afterChoicesFn: afterChoicesFn || null };
+  renderCurrentLine();
+}
+
+function renderCurrentLine(){
+  var s = state.script;
+  if(!s) return;
+
+  if(s.index >= s.lines.length){
+    if(typeof s.afterChoicesFn === "function") s.afterChoicesFn();
+    else showNextDayChoices();
+    scheduleAuto();
+    return;
+  }
+
+  var line = s.lines[s.index];
+
+  if(line.scene) setBackground(line.scene);
+  if(line.slots) applySlots(line.slots, line.who);
+
+  if(line.unlockCg) unlockCg(line.unlockCg);
+
+  if(line.effects && line.effects.indexOf("shakeUI") !== -1) shakeUI();
+  if(line.effects && line.effects.indexOf("shakeStage") !== -1) shakeStage();
+
+  if(typeof line.on === "function") line.on(state);
+
+  $speaker.textContent = (names[line.who] ? names[line.who] : line.who);
+  $text.textContent = line.text;
+
+  pushBacklog($speaker.textContent, line.text);
+  updateHud();
+  scheduleAuto();
+}
+
+function next(){
+  if(choicesOpen()) return;
+  if($titleScreen.classList.contains("open")) return;
+
+  if(!state.script){
+    startDayEvent(null);
+    return;
+  }
+  state.script.index += 1;
+  renderCurrentLine();
+}
+
+/* ============================================================================
+  9) Game flow
+============================================================================ */
+function updateHud(){ $day.textContent = String(state.day); }
+
+function startPrologue(){
+  startScript([
+    {
+      who:"system",
+      scene:"forestday",
+      slots:{ L:null, C:null, R:null },
+      text:"…눈을 뜨자, 낯선 숲.\n그리고 머릿속에 스치는 이름.\n\n『환웅』",
+      effects:["shakeUI"]
+    },
+    {
+      who:"system",
+      scene:"forestday",
+      slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
+      text:"두 존재가 당신을 바라본다.\n곰과 호랑이.\n\n『21일 안에 반려자를 선택하라.』",
+      effects:["shakeStage"]
+    },
+    {
+      who:"hwanung",
+      scene:"forestday",
+      slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
+      text:"…내가 정말 환웅이라고?\n그리고 결혼…?"
+    }
+  ], function(){
+    addChoice("곰(웅혜)와 함께한다 (호감+)", function(){
+      playSfx("choice");
+      state.vars.affBear += 2;
+      pushBacklog("선택", "곰과 함께한다");
+      startDayEvent("bear");
+    });
+    addChoice("호랑이(호린)와 함께한다 (호감+)", function(){
+      playSfx("choice");
+      state.vars.affTiger += 2;
+      pushBacklog("선택", "호랑이와 함께한다");
+      startDayEvent("tiger");
+    });
+  });
+}
+
+function pickEvent(focus){
+  var roll = Math.random();
+  if(focus === "bear" && roll < 0.65) return eventBear();
+  if(focus === "tiger" && roll < 0.65) return eventTiger();
+
+  var r = Math.random();
+  if(r < 0.34) return eventRandomFood();
+  if(r < 0.67) return eventRandomArgument();
+  return eventRandomDream();
+}
+
+function startDayEvent(focus){
+  if(state.day > state.maxDay){ startMarriageFinal(); return; }
+  var ev = pickEvent(focus);
+  startScript(ev.lines, ev.after);
+}
+
+function endDay(){
+  state.day += 1;
+  updateHud();
+  if(state.day > state.maxDay){ startMarriageFinal(); return; }
+  showNextDayChoices();
+}
+
+function showNextDayChoices(){
+  addChoice("곰(웅혜)와 시간을 보낸다", function(){
+    playSfx("choice");
+    pushBacklog("선택","곰과 시간을 보낸다");
+    startDayEvent("bear");
+  });
+  addChoice("호랑이(호린)와 시간을 보낸다", function(){
+    playSfx("choice");
+    pushBacklog("선택","호랑이와 시간을 보낸다");
+    startDayEvent("tiger");
+  });
+  addChoice("랜덤으로 흐름에 맡긴다", function(){
+    playSfx("choice");
+    pushBacklog("선택","랜덤으로 맡긴다");
+    startDayEvent(null);
+  });
+}
+
+/* Events */
+function eventBear(){
+  return {
+    lines: [
+      { who:"system", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_smile"}, R:null },
+        text:"DAY " + state.day + "\n웅혜는 조용히 당신 옆에 앉아, 따뜻한 차를 내민다." },
+      { who:"bear", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_smile"}, R:null },
+        text:"방금 들으신 대로예요.\n…당신이 불안해 보였거든요." },
+      { who:"hwanung", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_neutral"}, R:null },
+        text:"내가… 불안해 보였나?" }
+    ],
+    after: function(){
+      addChoice("고맙다고 말하며 차를 마신다", function(){
+        playSfx("choice");
+        state.vars.affBear += 2;
+        shakeUI();
+        pushBacklog("선택","고맙다고 말하며 차를 마신다");
+        endDay();
+      });
+      addChoice("아무 말 없이 마신다", function(){
+        playSfx("choice");
+        state.vars.affBear += 1;
+        pushBacklog("선택","아무 말 없이 마신다");
+        endDay();
+      });
+      addChoice("호랑이를 떠올린다…", function(){
+        playSfx("choice");
+        state.vars.affTiger += 1;
+        pushBacklog("선택","호랑이를 떠올린다");
+        endDay();
+      });
+    }
+  };
+}
+
+function eventTiger(){
+  return {
+    lines: [
+      { who:"system", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_smile"}, C:null, R:null },
+        text:"DAY " + state.day + "\n호린은 당신의 손목을 잡아 끌며 말한다." },
+      { who:"tiger", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_smile"}, C:null, R:null },
+        text:"가만히 있지 말고, 나랑 같이 움직이자.\n결정은… 빠를수록 좋지!" },
+      { who:"hwanung", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:null },
+        text:"엄청 직진이네…" }
+    ],
+    after: function(){
+      addChoice("맞장구치며 따라간다", function(){
+        playSfx("choice");
+        state.vars.affTiger += 2;
+        shakeStage();
+        pushBacklog("선택","맞장구치며 따라간다");
+        endDay();
+      });
+      addChoice("손을 살짝 빼며 천천히 말한다", function(){
+        playSfx("choice");
+        state.vars.affTiger += 1;
+        pushBacklog("선택","천천히 말한다");
+        endDay();
+      });
+      addChoice("곰에게 도움을 요청한다", function(){
+        playSfx("choice");
+        state.vars.affBear += 2;
+        pushBacklog("선택","곰에게 도움을 요청한다");
+        endDay();
+      });
+    }
+  };
+}
+
+function eventRandomFood(){
+  return {
+    lines: [
+      { who:"system", scene:"forestday",
+        slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
+        text:"DAY " + state.day + "\n랜덤 이벤트: “의식용 음식”을 고르는 시간이 찾아왔다." },
+      { who:"system", text:"둘 중 무엇을 선택할까?\n(선택에 따라 호감도가 달라집니다)" }
+    ],
+    after: function(){
+      addChoice("달콤한 꿀떡을 고른다", function(){
+        playSfx("choice");
+        state.vars.affBear += 2;
+        pushBacklog("선택","꿀떡을 고른다");
+        endDay();
+      });
+      addChoice("매운 산초 꼬치를 고른다", function(){
+        playSfx("choice");
+        state.vars.affTiger += 2;
+        pushBacklog("선택","산초 꼬치를 고른다");
+        endDay();
+      });
+      addChoice("둘 다 반반", function(){
+        playSfx("choice");
+        state.vars.affBear += 1;
+        state.vars.affTiger += 1;
+        pushBacklog("선택","둘 다 반반");
+        endDay();
+      });
+    }
+  };
+}
+
+function eventRandomArgument(){
+  return {
+    lines: [
+      { who:"system", scene:"forestday",
+        slots:{ L:{who:"tiger", key:"tiger_angry"}, C:null, R:{who:"bear", key:"bear_neutral"} },
+        text:"DAY " + state.day + "\n랜덤 이벤트: 두 사람이 사소한 말로 언성이 높아졌다.",
+        effects:["shakeUI"] },
+      { who:"tiger", text:"맨날 그렇게 참기만 하면 해결이 돼?" },
+      { who:"bear", text:"…서로를 다치게 하고 싶지 않았을 뿐이에요." }
+    ],
+    after: function(){
+      addChoice("호랑이를 진정시킨다", function(){
+        playSfx("choice");
+        state.vars.affTiger += 1;
+        pushBacklog("선택","호랑이를 진정시킨다");
+        endDay();
+      });
+      addChoice("곰을 감싸준다", function(){
+        playSfx("choice");
+        state.vars.affBear += 2;
+        pushBacklog("선택","곰을 감싸준다");
+        endDay();
+      });
+      addChoice("둘 다에게 사과를 요구한다", function(){
+        playSfx("choice");
+        state.vars.affBear -= 1;
+        state.vars.affTiger -= 1;
+        shakeStage();
+        pushBacklog("선택","둘 다에게 사과를 요구한다");
+        endDay();
+      });
+    }
+  };
+}
+
+function eventRandomDream(){
+  return {
+    lines: [
+      { who:"system", scene:"cavenight", slots:{ L:null, C:null, R:null },
+        text:"DAY " + state.day + "\n랜덤 이벤트: 밤, 이상한 꿈을 꾼다.\n\n“21일이 끝나면, 선택하지 못한 쪽은…”" },
+      { who:"hwanung", text:"…그 뒤가 들리지 않는다." }
+    ],
+    after: function(){
+      addChoice("내일을 준비한다", function(){
+        playSfx("choice");
+        pushBacklog("선택","내일을 준비한다");
+        endDay();
+      });
+    }
+  };
+}
+
+function startMarriageFinal(){
+  var b = state.vars.affBear;
+  var t = state.vars.affTiger;
+  var rec = (b === t) ? "동점" : (b > t ? "곰" : "호랑이");
+
+  startScript([
+    { who:"system", scene:"palace",
+      slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
+      text:"21일이 지났다.\n이제 결혼 상대를 정해야 한다.\n\n(현재 호감도: 곰 " + b + " / 호랑이 " + t + ")",
+      effects:["shakeUI"] },
+    { who:"system", text:"“당신의 선택은 곧 ‘새로운 시대의 시작’.”\n추천: " + rec }
+  ], function(){
+    addChoice("곰(웅혜)와 결혼한다", function(){
+      playSfx("choice");
+      state.partnerLocked = "bear";
+      pushBacklog("선택","곰과 결혼");
+      endingBear();
+    });
+    addChoice("호랑이(호린)과 결혼한다", function(){
+      playSfx("choice");
+      state.partnerLocked = "tiger";
+      pushBacklog("선택","호랑이와 결혼");
+      endingTiger();
+    });
+    addChoice("호감도 높은 쪽으로 자동 선택", function(){
+      playSfx("choice");
+      pushBacklog("선택","자동 선택");
+      if(b >= t){ state.partnerLocked="bear"; endingBear(); }
+      else{ state.partnerLocked="tiger"; endingTiger(); }
+    });
+  });
+}
+
+function endingBear(){
+  startScript([
+    { who:"system", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_smile"}, R:null },
+      text:"GOOD END?\n웅혜는 조용히 웃으며 당신의 손을 잡는다." },
+    { who:"bear", text:"…당신의 곁이, 이제 제 자리예요." },
+    { who:"system", text:"엔딩은 템플릿!" }
+  ], null);
+}
+function endingTiger(){
+  startScript([
+    { who:"system", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_smile"}, C:null, R:null },
+      text:"GOOD END?\n호린은 숨을 크게 들이쉬고, 웃으며 말한다." },
+    { who:"tiger", text:"후회는 싫어. 그래서… 네 옆에 설 거야." },
+    { who:"system", text:"엔딩은 템플릿!" }
+  ], null);
+}
+
+/* ============================================================================
+  10) Choices
+============================================================================ */
+function openChoices(){ $choiceOverlay.classList.add("open"); }
+function closeChoices(){
+  $choiceOverlay.classList.remove("open");
+  $choicePanel.innerHTML = "";
+}
+function choicesOpen(){ return $choiceOverlay.classList.contains("open"); }
+
+function addChoice(text, onClick){
+  if($choicePanel.childElementCount >= 3) return;
+
+  var btn = document.createElement("button");
+  btn.className = "midChoice";
+  var idx = $choicePanel.childElementCount + 1;
+  btn.textContent = String(idx) + ". " + text;
+
+  btn.addEventListener("click", function(){
+    closeChoices();
+    onClick();
+  });
+
+  $choicePanel.appendChild(btn);
+  openChoices();
+}
+
+/* ============================================================================
+  11) Save / Load
+============================================================================ */
+function normalizeState(obj){
+  if(!obj || typeof obj !== "object") return null;
+
+  if(typeof obj.day !== "number") obj.day = 1;
+  if(typeof obj.maxDay !== "number") obj.maxDay = 21;
+
+  if(!obj.vars || typeof obj.vars !== "object") obj.vars = { affBear:0, affTiger:0 };
+  if(typeof obj.vars.affBear !== "number") obj.vars.affBear = 0;
+  if(typeof obj.vars.affTiger !== "number") obj.vars.affTiger = 0;
+
+  if(!obj.scene) obj.scene = "forestday";
+  if(!obj.slots) obj.slots = { L:null, C:null, R:null };
+  if(!Array.isArray(obj.backlog)) obj.backlog = [];
+
+  if(!obj.gallery || typeof obj.gallery !== "object") obj.gallery = {};
+  if(!Array.isArray(obj.gallery.unlockedCg)) obj.gallery.unlockedCg = [];
+
+  if(obj.script && (!obj.script.lines || typeof obj.script.index !== "number")){
+    obj.script = null;
+  }
+  return obj;
+}
+
+function save(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    toast("저장 완료!");
+  }catch(e){
+    toast("저장 실패(용량/권한 문제)");
+  }
+}
+
+function load(){
+  var raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw){ toast("저장 데이터가 없어요."); return; }
+
+  try{
+    var obj = JSON.parse(raw);
+    obj = normalizeState(obj);
+    if(!obj) throw new Error("bad");
+    state = obj;
+
+    toast("불러오기 완료!");
+    setBackground(state.scene || "forestday");
+    applySlots(state.slots || {L:null,C:null,R:null}, null);
+    updateHud();
+    updateBgmUI();
+    updateAutoUI();
+
+    if(state.script) renderCurrentLine();
+    else startDayEvent(null);
+  }catch(e){
+    toast("저장 데이터가 손상됐어요.");
+  }
+}
+
+function resetGame(){
+  state.day = 1;
+  state.maxDay = 21;
+  state.partnerLocked = null;
+  state.vars = { affBear: 0, affTiger: 0 };
+  state.script = null;
+  state.scene = "forestday";
+  state.slots = { L:null, C:null, R:null };
+  state.backlog = [];
+
+  updateHud();
+  setBackground("forestday");
+  applySlots({L:null,C:null,R:null}, null);
+}
+
+/* ============================================================================
+  12) Gallery
+============================================================================ */
+var cgAllKeys = [];
+var galleryPage = 0;
+var PAGE_SIZE = 4;
+var viewerIndex = 0;
+
+function isUnlockedCg(key){
+  ensureGallery();
+  return state.gallery.unlockedCg.indexOf(key) !== -1;
+}
+
+function getCgMeta(key){
+  var m = cgMeta[key];
+  if(m && typeof m === "object"){
+    return { title: m.title || key, desc: m.desc || "" };
+  }
+  return { title: key, desc: "" };
+}
+
+function openGallery(){
+  buildCgKeyList();
+  galleryPage = 0;
+  renderGalleryPage();
+  $galleryModal.classList.add("open");
+}
+function closeGallery(){ $galleryModal.classList.remove("open"); }
+
+function renderGalleryPage(){
+  $galleryBody.innerHTML = "";
+
+  buildCgKeyList();
+  var total = cgAllKeys.length;
+  if(total === 0){
+    $galleryBody.innerHTML = '<div class="kbd">assets.cg에 CG가 아직 등록되지 않았어요.</div>';
+    $pageInfo.textContent = "0 / 0";
+    return;
+  }
+
+  var totalPages = Math.ceil(total / PAGE_SIZE);
+  if(galleryPage < 0) galleryPage = 0;
+  if(galleryPage >= totalPages) galleryPage = totalPages - 1;
+
+  $pageInfo.textContent = String(galleryPage + 1) + " / " + String(totalPages);
+
+  var grid = document.createElement("div");
+  grid.className = "galleryGrid2x2";
+
+  var start = galleryPage * PAGE_SIZE;
+  var end = Math.min(start + PAGE_SIZE, total);
+
+  for(var i=start;i<end;i++){
+    (function(idx){
+      var key = cgAllKeys[idx];
+      var unlocked = isUnlockedCg(key);
+
+      var item = document.createElement("div");
+      item.className = "cgThumb" + (unlocked ? "" : " locked");
+
+      var src = assets.cg[key] || "";
+      var meta = getCgMeta(key);
+
+      var html = "";
+      html += '<img alt="' + escapeHtml(key) + '" src="' + escapeHtml(src) + '">';
+      html += '<div class="cgLabel">' + escapeHtml(meta.title) + '</div>';
+      html += '<div class="cgDesc">' + escapeHtml(meta.desc) + '</div>';
+      item.innerHTML = html;
+
+      if(!unlocked){
+        var lock = document.createElement("div");
+        lock.className = "cgLock";
+        lock.textContent = "잠김 (실루엣 미리보기)";
+        item.appendChild(lock);
+      }
+
+      item.addEventListener("click", function(){
+        playSfx("click");
+        openCgViewer(idx);
+      });
+
+      grid.appendChild(item);
+    })(i);
+  }
+
+  var filled = end - start;
+  for(var e=filled;e<PAGE_SIZE;e++){
+    var empty = document.createElement("div");
+    empty.className = "cgThumb";
+    empty.style.opacity = "0.25";
+    empty.style.cursor = "default";
+    empty.innerHTML = '<div class="cgLock" style="background: rgba(0,0,0,.20);">비어있음</div>';
+    grid.appendChild(empty);
+  }
+
+  $galleryBody.appendChild(grid);
+}
+
+function openCgViewer(idx){
+  buildCgKeyList();
+  if(cgAllKeys.length === 0) return;
+
+  if(idx < 0) idx = 0;
+  if(idx >= cgAllKeys.length) idx = cgAllKeys.length - 1;
+
+  viewerIndex = idx;
+  renderCgViewer();
+  $cgViewerModal.classList.add("open");
+}
+function closeCgViewer(){ $cgViewerModal.classList.remove("open"); }
+
+function renderCgViewer(){
+  buildCgKeyList();
+  if(cgAllKeys.length === 0) return;
+
+  var key = cgAllKeys[viewerIndex];
+  var unlocked = isUnlockedCg(key);
+  var src = assets.cg[key] || "";
+  var meta = getCgMeta(key);
+
+  $viewerCounter.textContent = String(viewerIndex + 1) + " / " + String(cgAllKeys.length);
+  $viewerTitle.textContent = meta.title || key;
+  $viewerDesc.textContent = meta.desc || "";
+
+  $viewerImg.src = src;
+
+  // ✅ 잠김이면 wrapper에 locked 클래스 부여(이미지 흐리게/검게)
+  if(unlocked){
+    $viewerImgWrap.classList.remove("locked");
+    $viewerLock.style.display = "none";
+  }else{
+    $viewerImgWrap.classList.add("locked");
+    $viewerLock.style.display = "grid";
+  }
+}
+
+function moveCg(delta){
+  buildCgKeyList();
+  if(cgAllKeys.length === 0) return;
+
+  viewerIndex += delta;
+  if(viewerIndex < 0) viewerIndex = 0;
+  if(viewerIndex >= cgAllKeys.length) viewerIndex = cgAllKeys.length - 1;
+  renderCgViewer();
+}
+
+/* ============================================================================
+  13) Bindings
+============================================================================ */
+$btnNext.addEventListener("click", function(){ playSfx("click"); next(); });
+
+$btnAuto.addEventListener("click", function(){ playSfx("click"); setAuto(!autoEnabled); });
+$btnBacklog.addEventListener("click", function(){ playSfx("click"); openBacklog(); });
+$btnSave.addEventListener("click", function(){ playSfx("click"); save(); });
+$btnLoad.addEventListener("click", function(){ playSfx("click"); load(); });
+
+$btnBgm.addEventListener("click", function(){ playSfx("click"); toggleBgm(); });
+$btnTitle.addEventListener("click", function(){ playSfx("click"); showTitle(); });
+
+$btnClose.addEventListener("click", function(){ closeBacklog(); });
+$btnClearLog.addEventListener("click", function(){
+  state.backlog = [];
+  renderBacklog();
+  toast("백로그 초기화!");
+});
+
+$btnGalleryClose.addEventListener("click", function(){ closeGallery(); });
+$btnUnlockAll.addEventListener("click", function(){ playSfx("click"); unlockAllCgs(); });
+
+$btnPrevPage.addEventListener("click", function(){
+  playSfx("click");
+  galleryPage -= 1;
+  renderGalleryPage();
+});
+$btnNextPage.addEventListener("click", function(){
+  playSfx("click");
+  galleryPage += 1;
+  renderGalleryPage();
+});
+
+$btnViewerClose.addEventListener("click", function(){ closeCgViewer(); });
+$btnCgPrev.addEventListener("click", function(){ playSfx("click"); moveCg(-1); });
+$btnCgNext.addEventListener("click", function(){ playSfx("click"); moveCg(1); });
+
+$modal.addEventListener("click", function(e){ if(e.target === $modal) closeBacklog(); });
+$galleryModal.addEventListener("click", function(e){ if(e.target === $galleryModal) closeGallery(); });
+$cgViewerModal.addEventListener("click", function(e){ if(e.target === $cgViewerModal) closeCgViewer(); });
+
+/* Title buttons */
+$btnStart.addEventListener("click", function(){
+  playSfx("click");
+  hideTitle();
+  resetGame();
+  startPrologue();
+});
+$btnContinue.addEventListener("click", function(){
+  playSfx("click");
+  hideTitle();
+  load();
+});
+$btnGalleryTitle.addEventListener("click", function(){
+  playSfx("click");
+  openGallery();
+});
+$btnQuit.addEventListener("click", function(){
+  playSfx("click");
+  hideTitle();
+});
+
+/* Click to advance */
+function canAdvanceByClick(){
+  if(choicesOpen()) return false;
+  if($modal.classList.contains("open")) return false;
+  if($galleryModal.classList.contains("open")) return false;
+  if($cgViewerModal.classList.contains("open")) return false;
+  if($titleScreen.classList.contains("open")) return false;
+  return true;
+}
+function isUIControl(target){
+  return !!target.closest("button, .choiceOverlay, .modal, .btn, .controlsRow, .titleScreen");
+}
+$dialogueBox.addEventListener("click", function(e){
+  if(isUIControl(e.target)) return;
+  if(!canAdvanceByClick()) return;
+  playSfx("click");
+  next();
+});
+$stage.addEventListener("click", function(e){
+  if(e.target.closest("#dialogueBox")) return;
+  if(isUIControl(e.target)) return;
+  if(!canAdvanceByClick()) return;
+  playSfx("click");
+  next();
+});
+
+/* Keyboard */
+window.addEventListener("keydown", function(e){
+  if(e.code === "Escape"){
+    if($cgViewerModal.classList.contains("open")){ closeCgViewer(); return; }
+    if($galleryModal.classList.contains("open")){ closeGallery(); return; }
+    if($modal.classList.contains("open")){ closeBacklog(); return; }
+    if($titleScreen.classList.contains("open")){ hideTitle(); return; }
+  }
+
+  if(e.code === "KeyB"){ $modal.classList.contains("open") ? closeBacklog() : openBacklog(); return; }
+  if(e.code === "KeyA"){ setAuto(!autoEnabled); return; }
+  if(e.code === "KeyM"){ toggleBgm(); return; }
+
+  if($cgViewerModal.classList.contains("open")){
+    if(e.code === "ArrowLeft"){ moveCg(-1); return; }
+    if(e.code === "ArrowRight"){ moveCg(1); return; }
+  }
+
+  var idx = -1;
+  if(e.code === "Digit1") idx = 0;
+  if(e.code === "Digit2") idx = 1;
+  if(e.code === "Digit3") idx = 2;
+  if(idx !== -1 && $choicePanel.children[idx]){
+    $choicePanel.children[idx].click();
+    return;
+  }
+
+  if(e.code === "Space"){
+    e.preventDefault();
+    next();
+    return;
+  }
+});
+
+/* ============================================================================
+  14) Init
+============================================================================ */
+applyAudio();
+updateHud();
+updateAutoUI();
+updateBgmUI();
+setBackground("forestday");
+applySlots({ L:null, C:null, R:null }, null);
+showTitle();
+</script>
+</body>
+</html>
