@@ -54,12 +54,12 @@
 
 	.slot{
 	  position:absolute;
-	  bottom:calc(var(--boxH) - 600px);
+	  bottom:-40px;
 	  display:flex;
 	  justify-content:center;
 	  align-items:flex-end;
 	  width:32vw;
-	  height:calc(100vh - var(--boxH) + 170px);
+	  height:100vh;
 	  overflow:visible;
 	}
 
@@ -80,20 +80,18 @@
 	/* 캐릭터 크기/위치 */
 	.char{
 	  width:auto;
-	  height:calc(100vh - var(--boxH) + 520px); /* 지금보다 훨씬 크게 */
-	  max-width:42vw;                            /* 가로도 넉넉하게 */
+	  height:calc(100vh - var(--boxH) + 520px);
+	  max-width:42vw;
 	  object-fit:contain;
 	  object-position:center bottom;
 
-	  filter: drop-shadow(0 28px 44px rgba(0,0,0,.58));
-	  opacity:0;
-	  transition: opacity .18s ease, filter .18s ease;
+	  transform: translateY(300px); /* ↓ 캐릭터 내려주는 핵심 */
 	}
 
 	#charL,
 	#charC,
 	#charR{
-	  height:calc(100vh - var(--boxH) + 520px);
+	  height:112vh;
 	  max-width:42vw;
 	}
 
