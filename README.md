@@ -12,6 +12,7 @@
 비주얼 노벨 형태의 게임으로 구현하였습니다.
 
 플레이는 아래 링크에서 (현재 정상 진행 안됨.)
+
 https://jechy1234.github.io/DokidokiHwanwoongTale/
 
 ---
