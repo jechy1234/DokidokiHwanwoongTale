@@ -918,11 +918,11 @@ var assets = {
     palace: "assets/bg/palace.png",
 
     /* 있으면 사용, 없으면 자동 fallback */
-    cave_dawn:   "assets/bg/cave_dawn.png",
-    cave_morning:"assets/bg/cave_morning.png",
-    cave_noon:   "assets/bg/cave_noon.png",
-    cave_evening:"assets/bg/cave_evening.png",
-    cave_midnight:"assets/bg/cave_midnight.png",
+    roomdawn:   "assets/bg/room_dawn.png",
+    roommorning:"assets/bg/room_morning.png",
+    roomnoon:   "assets/bg/room_noon.png",
+    roomevening:"assets/bg/room_evening.png",
+    roommidnight:"assets/bg/room_midnight.png",
 	
 	/* 데스씬 이미지들 */
     death_lonely: "assets/bg/데드씬고독사.png",
@@ -949,9 +949,18 @@ var assets = {
     hwanung_sd: "assets/char/hwanung_sd.png",
 	hwanung_default: "assets/char/hwanung.png",
 	bear_default: "assets/char/bear_default.png",
+	mouse_default: "assets/char/bear_default.png",
+	cow_default: "assets/char/bear_default.png",
 	tiger_default: "assets/char/tiger_default.png",
 	rabbit_default: "assets/char/rabbit_default.png",
-	dragon_default: "assets/char/dragon_default.png"
+	dragon_default: "assets/char/dragon_default.png",
+	snake_default: "assets/char/snake_default.png",
+	horse_default: "assets/char/horse_default.png",
+	sheep_default: "assets/char/sheep_default.png",
+	monkey_default: "assets/char/monkey_default.png",
+	chicken_default: "assets/char/chicken_default.png",
+	dog_default: "assets/char/dog_default.png",
+	pig_default: "assets/char/pig_default.png",
   },
   
   portrait: {
@@ -979,8 +988,6 @@ var assets = {
 	click:  "assets/audio/sfx_click.wav",
     choice: "assets/audio/sfx_choice.wav",
 	shake:  "assets/audio/sfx_shake.wav",
-	boom:   "assets/audio/boom.wav",
-	bell:   "assets/audio/bell.wav"
   }
 };
 
@@ -1826,11 +1833,11 @@ function setBackground(key){
 
   if(key === "room"){
     var candidates = {
-      dawn: ["cave_dawn", "cavenight", "caveday"],
-      morning: ["cave_morning", "caveday", "forestday"],
-      noon: ["cave_noon", "caveday", "forestday"],
-      evening: ["cave_evening", "caveday", "forestsunset", "cavenight"],
-      midnight: ["cave_midnight", "cavenight", "caveday"]
+      dawn: ["roomdawn", "cavenight", "caveday"],
+      morning: ["roommorning", "caveday", "forestday"],
+      noon: ["roomnoon", "caveday", "forestday"],
+      evening: ["roomevening", "caveday", "forestsunset", "cavenight"],
+      midnight: ["roommidnight", "cavenight", "caveday"]
     }[timeKey()] || ["caveday"];
 
     for(var i=0;i<candidates.length;i++){
