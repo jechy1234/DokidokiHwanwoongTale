@@ -568,7 +568,7 @@
       <div class="titleMenu">
         <div class="titleLogo">
           <div class="titleName">두근두근 환웅전</div>
-          <div class="titleSub">21일 안에 반려자를 선택하라</div>
+          <div class="titleSub">21일간의 즐거운 생활</div>
         </div>
 
         <button class="titleBtn" id="btnStart">시작하기</button>
@@ -716,6 +716,11 @@
 
 <script>
 /* ============================================================================
+  환웅전 일정/행동 시스템 버전
+  - 기존 index.html 구조를 최대한 유지하면서 루프 시스템 추가
+============================================================================ */
+
+/* ============================================================================
   0) Assets / Names
 ============================================================================ */
 var assets = {
@@ -725,71 +730,174 @@ var assets = {
     forestday: "assets/bg/forest_day.png",
     caveday: "assets/bg/cave_day.png",
     cavenight: "assets/bg/cave_night.png",
-    palace: "assets/bg/palace.png"
+    palace: "assets/bg/palace.png",
+
+    /* 있으면 사용, 없으면 자동 fallback */
+    cave_dawn:   "assets/bg/cave_dawn.png",
+    cave_morning:"assets/bg/cave_morning.png",
+    cave_noon:   "assets/bg/cave_noon.png",
+    cave_evening:"assets/bg/cave_evening.png",
+    cave_midnight:"assets/bg/cave_midnight.png"
   },
 
-  /* CG는 assets.cg 기준 */
   cg: {
     cg_00: "assets/cg/intro_01.png",
-	cg_01: "assets/cg/서연.png",
-	cg_02: "assets/cg/우정.png",
-	cg_03: "assets/cg/호린.png",
-	cg_04: "assets/cg/묘묘.png",
-	cg_05: "assets/cg/유진.png",
-	cg_06: "assets/cg/설아.png",
-	cg_07: "assets/cg/마리.png",
-	cg_08: "assets/cg/미연.png",
-	cg_09: "assets/cg/지원.png",
-	cg_10: "assets/cg/유채.png",
-	cg_11: "assets/cg/수윤.png",
-	cg_12: "assets/cg/복희.png",
-	cg_13: "assets/cg/웅혜.png"
+    cg_01: "assets/cg/서연.png",
+    cg_02: "assets/cg/우정.png",
+    cg_03: "assets/cg/호린.png",
+    cg_04: "assets/cg/묘묘.png",
+    cg_05: "assets/cg/유진.png",
+    cg_06: "assets/cg/설아.png",
+    cg_07: "assets/cg/마리.png",
+    cg_08: "assets/cg/미연.png",
+    cg_09: "assets/cg/지원.png",
+    cg_10: "assets/cg/유채.png",
+    cg_11: "assets/cg/수윤.png",
+    cg_12: "assets/cg/복희.png",
+    cg_13: "assets/cg/웅혜.png"
   },
 
   char: {
-    bear_neutral: "assets/char/bear_neutral.png",
-    bear_smile:   "assets/char/bear_smile.png",
-    bear_angry:   "assets/char/bear_angry.png",
-
-    tiger_neutral:"assets/char/tiger_neutral.png",
-    tiger_smile:  "assets/char/tiger_smile.png",
-    tiger_angry:  "assets/char/tiger_angry.png"
+    hwanung_sd: "assets/char/hwanung_sd.png",
+	hwanung_default: "assets/char/hwanung.png",
+	bear_default: "assets/char/bear_default.png",
+	tiger_default: "assets/char/tiger_default.png",
+	rabbit_default: "assets/char/rabbit_default.png",
+	dragon_default: "assets/char/dragon_default.png"
   },
 
-  bgm: { main: "assets/audio/bgm.mp3" },
+  bgm: {
+	main: "assets/audio/bgm.mp3",
+	mystic: "assets/audio/mystic.mp3",
+	prologue: "assets/audio/prologue.mp3"
+  },
   sfx: {
-    click:  "assets/audio/sfx_click.wav",
+	click:  "assets/audio/sfx_click.wav",
     choice: "assets/audio/sfx_choice.wav",
-    shake:  "assets/audio/sfx_shake.wav"
+	shake:  "assets/audio/sfx_shake.wav",
+	boom:   "assets/audio/boom.wav",
+	bell:   "assets/audio/bell.wav"
   }
 };
 
-var cgMeta = {
-  // "cg_intro_01": { title: "프롤로그", desc: "낯선 숲에서 눈을 뜬 환웅." }
+var names = {
+  system: "...",
+  hwanung: "환웅",
+  rabbit: "묘묘",
+  monkey: "지원",
+  tiger: "호린",
+  snake: "설아",
+  cow: "우정",
+  horse: "마리",
+  sheep: "미연",
+  bear: "웅혜",
+  rat: "서연",
+  pig: "복희",
+  dog: "수윤",
+  chicken: "유채",
+  dragon: "유진"
 };
 
-var names = {
-  system: "SYSTEM",
-  hwanung: "환웅",
-  bear: "웅혜",
-  tiger: "호린"
-};
+var heroineKeys = [
+  "rabbit","monkey","tiger","snake","cow","horse","sheep",
+  "bear","rat","pig","dog","chicken","dragon"
+];
 
 /* ============================================================================
   1) State / Storage
 ============================================================================ */
-var STORAGE_KEY = "hwanung_vn_save_v4";
+var STORAGE_KEY = "hwanung_schedule_save_v1";
 
 var state = {
   day: 1,
   maxDay: 21,
-  partnerLocked: null,
-  vars: { affBear: 0, affTiger: 0 },
-  script: null,
-  scene: "forestday",
-  slots: { L:null, C:null, R:null },
+  timeIndex: 1,           // 0 새벽 / 1 아침 / 2 점심 / 3 저녁 / 4 심야
+  energy: 100,
+  maxEnergy: 100,
+  scene: "room",
   backlog: [],
-  gallery: { unlockedCg: [] }
+  gallery: { unlockedCg: [] },
+  affection: {},
+  script: null,
+  slots: { L:null, C:null, R:null }
+};
+
+function freshAffection(){
+  var map = {};
+  for(var i=0;i<heroineKeys.length;i++) map[heroineKeys[i]] = 0;
+  return map;
+}
+state.affection = freshAffection();
+
+var TIME_NAMES = ["새벽", "아침", "점심", "저녁", "심야"];
+var TIME_ICONS = ["🌅", "🌄", "☀️", "🌙", "💤"];
+
+var ACTION_COST = {
+  walk: 20,
+  town: 10,
+  explore: 30,
+  date: 30
+};
+
+var LOCATION_LABELS = {
+  forest: "숲길",
+  lake: "호수",
+  field: "들판",
+  mountain: "산",
+  village: "마을",
+  shrine: "신단"
+};
+
+var DWELLING = {
+  forest: ["rabbit","monkey"],
+  lake: ["tiger","snake"],
+  field: ["cow","horse","sheep"],
+  mountain: ["bear","rat"],
+  village: ["pig","dog"],
+  shrine: ["chicken","dragon"]
+};
+
+var WALK_TIME_POOL = {
+  dawn: {
+    forest: ["rabbit","monkey","bear"],
+    lake: ["snake","tiger"],
+    field: ["horse","cow"],
+    mountain: ["bear","rat"],
+    village: ["dog","pig"],
+    shrine: ["dragon","chicken"]
+  },
+  morning: {
+    forest: ["rabbit","dog","chicken"],
+    lake: ["tiger","snake"],
+    field: ["cow","horse","sheep"],
+    mountain: ["bear","rat"],
+    village: ["pig","dog"],
+    shrine: ["chicken","dragon"]
+  },
+  noon: {
+    forest: ["rabbit","monkey"],
+    lake: ["tiger","snake"],
+    field: ["cow","horse","sheep"],
+    mountain: ["bear","rat"],
+    village: ["pig","dog"],
+    shrine: ["dragon","chicken"]
+  },
+  evening: {
+    forest: ["rabbit","monkey"],
+    lake: ["tiger","snake"],
+    field: ["cow","horse","sheep"],
+    mountain: ["snake","bear"],
+    village: ["pig","dog"],
+    shrine: ["chicken","dragon"]
+  },
+  midnight: {
+    forest: ["monkey","rabbit"],
+    lake: ["snake","dragon"],
+    field: ["horse","rat"],
+    mountain: ["bear","snake","rat"],
+    village: ["dog","pig"],
+    shrine: ["dragon","chicken"]
+  }
 };
 
 /* ============================================================================
@@ -852,6 +960,9 @@ var $viewerCounter = document.getElementById("viewerCounter");
 var $viewerTitle = document.getElementById("viewerTitle");
 var $viewerDesc = document.getElementById("viewerDesc");
 
+var $hudLeft = document.querySelector(".hudLeft");
+var $hudRight = document.querySelector(".hudRight");
+
 /* ============================================================================
   3) Audio
 ============================================================================ */
@@ -864,11 +975,6 @@ var sfx = {
   choice: new Audio(),
   shake: new Audio()
 };
-try{
-  sfx.click.volume = 0.85;
-  sfx.choice.volume = 0.85;
-  sfx.shake.volume = 0.85;
-}catch(e){}
 
 function applyAudio(){
   if(assets.bgm && assets.bgm.main) bgm.src = assets.bgm.main;
@@ -886,7 +992,7 @@ function updateBgmUI(){
 }
 function toggleBgm(){
   if(!bgm.src){
-    toast("BGM 경로가 비어있어요. assets.bgm.main 설정!");
+    toast("BGM 경로가 비어있어요.");
     return;
   }
   try{
@@ -895,13 +1001,29 @@ function toggleBgm(){
   }catch(e){}
   updateBgmUI();
 }
-
+function playBgmByKey(key){
+  if(!key || !assets.bgm || !assets.bgm[key]) return;
+  try{
+    bgm.pause();
+    bgm.src = assets.bgm[key];
+    bgm.currentTime = 0;
+    bgm.play();
+  }catch(e){}
+  updateBgmUI();
+}
+function stopBgm(){
+  try{
+    bgm.pause();
+    bgm.currentTime = 0;
+  }catch(e){}
+  updateBgmUI();
+}
 /* ============================================================================
   4) Auto
 ============================================================================ */
 var autoEnabled = false;
 var autoTimer = null;
-var AUTO_DELAY = 1050;
+var AUTO_DELAY = 1100;
 
 function updateAutoUI(){
   $autoState.textContent = autoEnabled ? "ON" : "OFF";
@@ -921,7 +1043,7 @@ function scheduleAuto(){
   if($galleryModal.classList.contains("open")) return;
   if($cgViewerModal.classList.contains("open")) return;
   if($titleScreen.classList.contains("open")) return;
-
+  if(!state.script) return;
   autoTimer = setTimeout(function(){ next(); }, AUTO_DELAY);
 }
 
@@ -953,20 +1075,20 @@ function toast(msg){
     el.style.transform = "translateX(-50%)";
     el.style.padding = "10px 12px";
     el.style.borderRadius = "14px";
-    el.style.border = "1px solid rgba(255,255,255,.12)";
-    el.style.background = "rgba(0,0,0,.55)";
-    el.style.color = "white";
-    el.style.backdropFilter = "blur(8px)";
+    el.style.border = "1px solid rgba(255,255,255,.10)";
+    el.style.background = "rgba(8,10,16,.88)";
+    el.style.color = "#f2f6ff";
     el.style.fontSize = "13px";
-    el.style.opacity = "0";
-    el.style.transition = "opacity .15s";
     el.style.zIndex = "999";
+    el.style.pointerEvents = "none";
     document.body.appendChild(el);
   }
   el.textContent = msg;
   el.style.opacity = "1";
   if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ el.style.opacity = "0"; }, 1100);
+  toastTimer = setTimeout(function(){
+    el.style.opacity = "0";
+  }, 1600);
 }
 
 function escapeHtml(str){
@@ -978,7 +1100,6 @@ function escapeHtml(str){
     .replace(/'/g, "&#39;");
 }
 
-/* Backlog */
 function pushBacklog(who, text){
   if(!Array.isArray(state.backlog)) state.backlog = [];
   state.backlog.push({ who: who, text: text });
@@ -1004,7 +1125,93 @@ function openBacklog(){ renderBacklog(); $modal.classList.add("open"); }
 function closeBacklog(){ $modal.classList.remove("open"); }
 
 /* ============================================================================
-  6) Title Screen
+  6) Dynamic Room UI
+============================================================================ */
+function injectGameUiCss(){
+  var css = ""
+  + ".roomLayer{position:absolute;inset:0;pointer-events:none;z-index:12;}"
+  + ".roomHotspot{position:absolute;pointer-events:auto;cursor:pointer;display:flex;align-items:center;justify-content:center;"
+  + "background:rgba(10,14,25,.28);border:1px solid rgba(255,255,255,.10);border-radius:18px;color:rgba(242,246,255,.92);"
+  + "backdrop-filter:blur(6px);transition:transform .12s ease,background .12s ease;box-shadow:0 10px 24px rgba(0,0,0,.24);}"
+  + ".roomHotspot:hover{transform:translateY(-2px);background:rgba(18,26,44,.42);}"
+  + ".hotspotLabel{padding:10px 14px;font-size:14px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.35);white-space:pre-line;text-align:center;}"
+  + ".bedSpot{right:10vw;bottom:31vh;width:min(220px,24vw);height:min(120px,13vw);}"
+  + ".entranceSpot{left:7vw;top:26vh;width:min(220px,24vw);height:min(320px,34vh);border-radius:24px;}"
+  + ".roomInfoCard{position:absolute;right:3vw;top:86px;pointer-events:none;z-index:12;padding:12px 14px;border-radius:18px;"
+  + "border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.28);backdrop-filter:blur(8px);min-width:250px;}"
+  + ".roomInfoTitle{font-weight:900;margin-bottom:8px;font-size:14px;}"
+  + ".roomInfoBody{font-size:13px;line-height:1.65;color:rgba(242,246,255,.8);white-space:pre-line;}"
+  + ".sdHint{position:absolute;left:50%;transform:translateX(-50%);bottom:30vh;z-index:11;pointer-events:none;"
+  + "padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);font-size:12px;color:rgba(242,246,255,.7);}"
+  + "@media (max-width:720px){.entranceSpot{left:4vw;top:23vh;width:28vw;height:28vh}.bedSpot{right:5vw;bottom:31vh;width:28vw;height:11vh}.roomInfoCard{right:4vw;top:92px;min-width:auto;width:44vw}}";
+  var style = document.createElement("style");
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+var roomLayer, bedSpot, entranceSpot, roomInfoCard, roomInfoBody, sdHint;
+function ensureRoomUi(){
+  if(roomLayer) return;
+
+  roomLayer = document.createElement("div");
+  roomLayer.className = "roomLayer";
+  roomLayer.id = "roomLayer";
+
+  entranceSpot = document.createElement("button");
+  entranceSpot.className = "roomHotspot entranceSpot";
+  entranceSpot.innerHTML = '<div class="hotspotLabel">동굴 입구\n행동 선택</div>';
+
+  bedSpot = document.createElement("button");
+  bedSpot.className = "roomHotspot bedSpot";
+  bedSpot.innerHTML = '<div class="hotspotLabel">침대\n수면 / 휴식</div>';
+
+  roomInfoCard = document.createElement("div");
+  roomInfoCard.className = "roomInfoCard";
+  roomInfoCard.innerHTML = '<div class="roomInfoTitle">오늘의 상태</div><div class="roomInfoBody" id="roomInfoBody"></div>';
+  roomInfoBody = roomInfoCard.querySelector("#roomInfoBody");
+
+  sdHint = document.createElement("div");
+  sdHint.className = "sdHint";
+  sdHint.textContent = "환웅의 거처";
+
+  roomLayer.appendChild(entranceSpot);
+  roomLayer.appendChild(bedSpot);
+  roomLayer.appendChild(roomInfoCard);
+  roomLayer.appendChild(sdHint);
+  $stage.appendChild(roomLayer);
+
+  entranceSpot.addEventListener("click", function(e){
+    e.stopPropagation();
+    playSfx("click");
+    if(state.script) return;
+    openActionMenu();
+  });
+
+  bedSpot.addEventListener("click", function(e){
+    e.stopPropagation();
+    playSfx("click");
+    if(state.script) return;
+    confirmSleep();
+  });
+}
+
+function setRoomUiVisible(show){
+  ensureRoomUi();
+  roomLayer.style.display = show ? "block" : "none";
+}
+
+function updateRoomInfo(){
+  if(!roomInfoBody) return;
+  var available = getDateCandidates().length;
+  roomInfoBody.textContent =
+    "시간대: " + getTimeLabel() + "\n"
+    + "행동력: " + state.energy + " / " + state.maxEnergy + "\n"
+    + "데이트 가능: " + (available > 0 ? (available + "명") : "없음") + "\n"
+    + "침대 클릭 = 수면 / 동굴 입구 클릭 = 행동";
+}
+
+/* ============================================================================
+  7) Title / Background / Character
 ============================================================================ */
 function showTitle(){
   $titleScreen.classList.add("open");
@@ -1017,33 +1224,249 @@ function hideTitle(){
   $titleScreen.setAttribute("aria-hidden","true");
 }
 
+function timeKey(){
+  if(state.timeIndex === 0) return "dawn";
+  if(state.timeIndex === 1) return "morning";
+  if(state.timeIndex === 2) return "noon";
+  if(state.timeIndex === 3) return "evening";
+  return "midnight";
+}
+function getTimeLabel(){
+  return TIME_ICONS[state.timeIndex] + " " + TIME_NAMES[state.timeIndex];
+}
+
+function setBackground(key){
+  state.scene = key;
+  var src = "";
+
+  if(key === "none"){
+    $bgImg.removeAttribute("src");
+    $bgImg.style.display = "none";
+    $sceneTag.textContent = "Scene: none";
+    return;
+  }
+
+  if(key === "room"){
+    var candidates = {
+      dawn: ["cave_dawn", "cavenight", "caveday"],
+      morning: ["cave_morning", "caveday", "forestday"],
+      noon: ["cave_noon", "caveday", "forestday"],
+      evening: ["cave_evening", "caveday", "forestsunset", "cavenight"],
+      midnight: ["cave_midnight", "cavenight", "caveday"]
+    }[timeKey()] || ["caveday"];
+
+    for(var i=0;i<candidates.length;i++){
+      if(assets.bg[candidates[i]]){
+        src = assets.bg[candidates[i]];
+        break;
+      }
+    }
+  }else{
+    src = (assets.bg && assets.bg[key]) ? assets.bg[key] : "";
+  }
+
+  if(src){
+    $bgImg.src = src;
+    $bgImg.style.display = "block";
+  }else{
+    $bgImg.removeAttribute("src");
+    $bgImg.style.display = "none";
+  }
+  $sceneTag.textContent = "Scene: " + key;
+}
+
+function applySlots(slots){
+  state.slots = slots || {L:null, C:null, R:null};
+  var map = { L:$charL, C:$charC, R:$charR };
+  var posList = ["L","C","R"];
+
+  for(var i=0;i<posList.length;i++){
+    var pos = posList[i];
+    var el = map[pos];
+    var info = state.slots[pos];
+    if(!info){
+      el.className = "char";
+      el.style.display = "none";
+      el.removeAttribute("src");
+      continue;
+    }
+    var src = info.src || "";
+    if(!src && info.key && assets.char && assets.char[info.key]) src = assets.char[info.key];
+    el.style.display = src ? "block" : "none";
+    if(src) el.src = src;
+    else el.removeAttribute("src");
+    el.className = "char show focus";
+  }
+}
+
 /* ============================================================================
-  7) Background / Slots / Gallery unlock
+  8) HUD
+============================================================================ */
+var pillTime = null;
+var pillEnergy = null;
+
+function ensureHudExtras(){
+  if(pillTime && pillEnergy) return;
+  pillTime = document.createElement("div");
+  pillTime.className = "pill";
+  pillTime.innerHTML = 'TIME <b id="timeValue">-</b>';
+
+  pillEnergy = document.createElement("div");
+  pillEnergy.className = "pill";
+  pillEnergy.innerHTML = '행동력 <b id="energyValue">100 / 100</b>';
+
+  $hudLeft.innerHTML = "";
+  $hudLeft.appendChild((function(){
+    var d = document.createElement("div");
+    d.className = "pill";
+    d.innerHTML = 'DAY <b id="day">1</b> / 21';
+    return d;
+  })());
+  $hudLeft.appendChild(pillTime);
+  $hudLeft.appendChild(pillEnergy);
+
+  $day = document.getElementById("day");
+}
+
+function updateHud(){
+  ensureHudExtras();
+  $day.textContent = String(state.day);
+  var t = document.getElementById("timeValue");
+  var e = document.getElementById("energyValue");
+  if(t) t.textContent = getTimeLabel();
+  if(e) e.textContent = String(state.energy) + " / " + String(state.maxEnergy);
+  updateRoomInfo();
+}
+
+/* ============================================================================
+  9) Script / Dialogue system
+============================================================================ */
+function startScript(lines, afterFn){
+  state.script = {
+    lines: lines || [],
+    index: 0,
+    afterFn: afterFn || null
+  };
+  setRoomUiVisible(false);
+  renderCurrentLine();
+}
+
+function renderCurrentLine(){
+  if(!state.script) return;
+
+  var s = state.script;
+  if(s.index >= s.lines.length){
+    var done = s.afterFn;
+    state.script = null;
+    if(typeof done === "function") done();
+    return;
+  }
+
+  var line = s.lines[s.index];
+  $speaker.textContent = names[line.who] || line.who || "SYSTEM";
+  $text.textContent = line.text || "";
+  pushBacklog($speaker.textContent, line.text || "");
+
+  if(line.scene) setBackground(line.scene);
+  else setBackground("room");
+
+  if(line.bgm){
+    playBgmByKey(line.bgm);
+  }
+
+  if(line.sfx){
+    playSfx(line.sfx);
+  }
+
+  if(line.effects){
+    if(line.effects.indexOf("shakeUI") !== -1) shakeUI();
+    if(line.effects.indexOf("shakeStage") !== -1) shakeStage();
+  }
+
+  if(line.slots) applySlots(line.slots);
+  else applySlots({L:null,C:null,R:null});
+
+  if(line.unlockCg) unlockCg(line.unlockCg);
+
+  scheduleAuto();
+}
+
+function next(){
+  if(choicesOpen()) return;
+  if($titleScreen.classList.contains("open")) return;
+  if($modal.classList.contains("open")) return;
+  if($galleryModal.classList.contains("open")) return;
+  if($cgViewerModal.classList.contains("open")) return;
+
+  if(!state.script) return;
+  state.script.index += 1;
+  renderCurrentLine();
+}
+
+/* ============================================================================
+  10) Choice system
+============================================================================ */
+function openChoices(){ $choiceOverlay.classList.add("open"); }
+function closeChoices(){
+  $choiceOverlay.classList.remove("open");
+  $choicePanel.innerHTML = "";
+}
+function choicesOpen(){ return $choiceOverlay.classList.contains("open"); }
+
+function addChoice(text, onClick, disabled){
+  var btn = document.createElement("button");
+  btn.className = "midChoice";
+  var idx = $choicePanel.childElementCount + 1;
+  btn.textContent = String(idx) + ". " + text;
+
+  if(disabled){
+    btn.disabled = true;
+    btn.style.opacity = ".45";
+    btn.style.cursor = "not-allowed";
+  }else{
+    btn.addEventListener("click", function(){
+      closeChoices();
+      onClick();
+    });
+  }
+
+  $choicePanel.appendChild(btn);
+  openChoices();
+}
+
+function showChoices(choiceList){
+  closeChoices();
+  for(var i=0;i<choiceList.length;i++){
+    addChoice(choiceList[i].text, choiceList[i].onClick, !!choiceList[i].disabled);
+  }
+}
+
+/* ============================================================================
+  11) Gallery
 ============================================================================ */
 function ensureGallery(){
   if(!state.gallery || typeof state.gallery !== "object") state.gallery = {};
   if(!Array.isArray(state.gallery.unlockedCg)) state.gallery.unlockedCg = [];
 }
+var cgAllKeys = [];
+var galleryPage = 0;
+var PAGE_SIZE = 4;
+var viewerIndex = 0;
 
 function buildCgKeyList(){
   cgAllKeys = [];
   if(!assets.cg) assets.cg = {};
   for(var k in assets.cg){
-    if(!assets.cg.hasOwnProperty(k)) continue;
-    cgAllKeys.push(String(k));
+    if(assets.cg.hasOwnProperty(k)) cgAllKeys.push(String(k));
   }
   cgAllKeys.sort();
 }
-
 function unlockCg(key){
   if(!key) return;
   ensureGallery();
   var s = String(key);
-  if(state.gallery.unlockedCg.indexOf(s) === -1){
-    state.gallery.unlockedCg.push(s);
-  }
+  if(state.gallery.unlockedCg.indexOf(s) === -1) state.gallery.unlockedCg.push(s);
 }
-
 function unlockAllCgs(){
   ensureGallery();
   buildCgKeyList();
@@ -1056,520 +1479,13 @@ function unlockAllCgs(){
   if($galleryModal.classList.contains("open")) renderGalleryPage();
   if($cgViewerModal.classList.contains("open")) renderCgViewer();
 }
-
-function setBackground(key){
-  state.scene = key;
-  var src = (assets.bg && assets.bg[key]) ? assets.bg[key] : "";
-  if(src){
-    $bgImg.src = src;
-    $bgImg.style.display = "block";
-  }else{
-    $bgImg.removeAttribute("src");
-    $bgImg.style.display = "none";
-  }
-  $sceneTag.textContent = "Scene: " + key;
-}
-
-function applySlots(slots, speakingWho){
-  state.slots = slots;
-
-  var map = { L:$charL, C:$charC, R:$charR };
-  var posList = ["L","C","R"];
-  for(var i=0;i<posList.length;i++){
-    var pos = posList[i];
-    var el = map[pos];
-    var info = slots[pos];
-    if(!info){
-      el.className = "char";
-      el.style.display = "none";
-      el.removeAttribute("src");
-      continue;
-    }
-    var src = (assets.char && assets.char[info.key]) ? assets.char[info.key] : "";
-    el.style.display = "block";
-    if(src) el.src = src;
-    else el.removeAttribute("src");
-    el.className = "char show";
-  }
-
-  var all = [
-    { el:$charL, info:slots.L },
-    { el:$charC, info:slots.C },
-    { el:$charR, info:slots.R }
-  ];
-  for(var j=0;j<all.length;j++){
-    var item = all[j];
-    if(!item.info) continue;
-    item.el.classList.remove("dim","focus");
-    if(speakingWho && item.info.who !== speakingWho){
-      item.el.classList.add("dim");
-    }else if(speakingWho && item.info.who === speakingWho){
-      item.el.classList.add("focus");
-    }
-  }
-}
-
-/* ============================================================================
-  8) Script system
-============================================================================ */
-function startScript(lines, afterChoicesFn){
-  state.script = { lines: lines, index: 0, afterChoicesFn: afterChoicesFn || null };
-  renderCurrentLine();
-}
-
-function renderCurrentLine(){
-  var s = state.script;
-  if(!s) return;
-
-  if(s.index >= s.lines.length){
-    if(typeof s.afterChoicesFn === "function") s.afterChoicesFn();
-    else showNextDayChoices();
-    scheduleAuto();
-    return;
-  }
-
-  var line = s.lines[s.index];
-
-  if(line.scene) setBackground(line.scene);
-  if(line.slots) applySlots(line.slots, line.who);
-
-  if(line.unlockCg) unlockCg(line.unlockCg);
-
-  if(line.effects && line.effects.indexOf("shakeUI") !== -1) shakeUI();
-  if(line.effects && line.effects.indexOf("shakeStage") !== -1) shakeStage();
-
-  if(typeof line.on === "function") line.on(state);
-
-  $speaker.textContent = (names[line.who] ? names[line.who] : line.who);
-  $text.textContent = line.text;
-
-  pushBacklog($speaker.textContent, line.text);
-  updateHud();
-  scheduleAuto();
-}
-
-function next(){
-  if(choicesOpen()) return;
-  if($titleScreen.classList.contains("open")) return;
-
-  if(!state.script){
-    startDayEvent(null);
-    return;
-  }
-  state.script.index += 1;
-  renderCurrentLine();
-}
-
-/* ============================================================================
-  9) Game flow
-============================================================================ */
-function updateHud(){ $day.textContent = String(state.day); }
-
-function startPrologue(){
-  startScript([
-    {
-      who:"system",
-      scene:"forestday",
-      slots:{ L:null, C:null, R:null },
-      text:"…눈을 뜨자, 낯선 숲.\n그리고 머릿속에 스치는 이름.\n\n『환웅』",
-      effects:["shakeUI"]
-    },
-    {
-      who:"system",
-      scene:"forestday",
-      slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
-      text:"두 존재가 당신을 바라본다.\n곰과 호랑이.\n\n『21일 안에 반려자를 선택하라.』",
-      effects:["shakeStage"]
-    },
-    {
-      who:"hwanung",
-      scene:"forestday",
-      slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
-      text:"…내가 정말 환웅이라고?\n그리고 결혼…?"
-    }
-  ], function(){
-    addChoice("곰(웅혜)와 함께한다 (호감+)", function(){
-      playSfx("choice");
-      state.vars.affBear += 2;
-      pushBacklog("선택", "곰과 함께한다");
-      startDayEvent("bear");
-    });
-    addChoice("호랑이(호린)와 함께한다 (호감+)", function(){
-      playSfx("choice");
-      state.vars.affTiger += 2;
-      pushBacklog("선택", "호랑이와 함께한다");
-      startDayEvent("tiger");
-    });
-  });
-}
-
-function pickEvent(focus){
-  var roll = Math.random();
-  if(focus === "bear" && roll < 0.65) return eventBear();
-  if(focus === "tiger" && roll < 0.65) return eventTiger();
-
-  var r = Math.random();
-  if(r < 0.34) return eventRandomFood();
-  if(r < 0.67) return eventRandomArgument();
-  return eventRandomDream();
-}
-
-function startDayEvent(focus){
-  if(state.day > state.maxDay){ startMarriageFinal(); return; }
-  var ev = pickEvent(focus);
-  startScript(ev.lines, ev.after);
-}
-
-function endDay(){
-  state.day += 1;
-  updateHud();
-  if(state.day > state.maxDay){ startMarriageFinal(); return; }
-  showNextDayChoices();
-}
-
-function showNextDayChoices(){
-  addChoice("곰(웅혜)와 시간을 보낸다", function(){
-    playSfx("choice");
-    pushBacklog("선택","곰과 시간을 보낸다");
-    startDayEvent("bear");
-  });
-  addChoice("호랑이(호린)와 시간을 보낸다", function(){
-    playSfx("choice");
-    pushBacklog("선택","호랑이와 시간을 보낸다");
-    startDayEvent("tiger");
-  });
-  addChoice("랜덤으로 흐름에 맡긴다", function(){
-    playSfx("choice");
-    pushBacklog("선택","랜덤으로 맡긴다");
-    startDayEvent(null);
-  });
-}
-
-/* Events */
-function eventBear(){
-  return {
-    lines: [
-      { who:"system", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_smile"}, R:null },
-        text:"DAY " + state.day + "\n웅혜는 조용히 당신 옆에 앉아, 따뜻한 차를 내민다." },
-      { who:"bear", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_smile"}, R:null },
-        text:"방금 들으신 대로예요.\n…당신이 불안해 보였거든요." },
-      { who:"hwanung", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_neutral"}, R:null },
-        text:"내가… 불안해 보였나?" }
-    ],
-    after: function(){
-      addChoice("고맙다고 말하며 차를 마신다", function(){
-        playSfx("choice");
-        state.vars.affBear += 2;
-        shakeUI();
-        pushBacklog("선택","고맙다고 말하며 차를 마신다");
-        endDay();
-      });
-      addChoice("아무 말 없이 마신다", function(){
-        playSfx("choice");
-        state.vars.affBear += 1;
-        pushBacklog("선택","아무 말 없이 마신다");
-        endDay();
-      });
-      addChoice("호랑이를 떠올린다…", function(){
-        playSfx("choice");
-        state.vars.affTiger += 1;
-        pushBacklog("선택","호랑이를 떠올린다");
-        endDay();
-      });
-    }
-  };
-}
-
-function eventTiger(){
-  return {
-    lines: [
-      { who:"system", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_smile"}, C:null, R:null },
-        text:"DAY " + state.day + "\n호린은 당신의 손목을 잡아 끌며 말한다." },
-      { who:"tiger", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_smile"}, C:null, R:null },
-        text:"가만히 있지 말고, 나랑 같이 움직이자.\n결정은… 빠를수록 좋지!" },
-      { who:"hwanung", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:null },
-        text:"엄청 직진이네…" }
-    ],
-    after: function(){
-      addChoice("맞장구치며 따라간다", function(){
-        playSfx("choice");
-        state.vars.affTiger += 2;
-        shakeStage();
-        pushBacklog("선택","맞장구치며 따라간다");
-        endDay();
-      });
-      addChoice("손을 살짝 빼며 천천히 말한다", function(){
-        playSfx("choice");
-        state.vars.affTiger += 1;
-        pushBacklog("선택","천천히 말한다");
-        endDay();
-      });
-      addChoice("곰에게 도움을 요청한다", function(){
-        playSfx("choice");
-        state.vars.affBear += 2;
-        pushBacklog("선택","곰에게 도움을 요청한다");
-        endDay();
-      });
-    }
-  };
-}
-
-function eventRandomFood(){
-  return {
-    lines: [
-      { who:"system", scene:"forestday",
-        slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
-        text:"DAY " + state.day + "\n랜덤 이벤트: “의식용 음식”을 고르는 시간이 찾아왔다." },
-      { who:"system", text:"둘 중 무엇을 선택할까?\n(선택에 따라 호감도가 달라집니다)" }
-    ],
-    after: function(){
-      addChoice("달콤한 꿀떡을 고른다", function(){
-        playSfx("choice");
-        state.vars.affBear += 2;
-        pushBacklog("선택","꿀떡을 고른다");
-        endDay();
-      });
-      addChoice("매운 산초 꼬치를 고른다", function(){
-        playSfx("choice");
-        state.vars.affTiger += 2;
-        pushBacklog("선택","산초 꼬치를 고른다");
-        endDay();
-      });
-      addChoice("둘 다 반반", function(){
-        playSfx("choice");
-        state.vars.affBear += 1;
-        state.vars.affTiger += 1;
-        pushBacklog("선택","둘 다 반반");
-        endDay();
-      });
-    }
-  };
-}
-
-function eventRandomArgument(){
-  return {
-    lines: [
-      { who:"system", scene:"forestday",
-        slots:{ L:{who:"tiger", key:"tiger_angry"}, C:null, R:{who:"bear", key:"bear_neutral"} },
-        text:"DAY " + state.day + "\n랜덤 이벤트: 두 사람이 사소한 말로 언성이 높아졌다.",
-        effects:["shakeUI"] },
-      { who:"tiger", text:"맨날 그렇게 참기만 하면 해결이 돼?" },
-      { who:"bear", text:"…서로를 다치게 하고 싶지 않았을 뿐이에요." }
-    ],
-    after: function(){
-      addChoice("호랑이를 진정시킨다", function(){
-        playSfx("choice");
-        state.vars.affTiger += 1;
-        pushBacklog("선택","호랑이를 진정시킨다");
-        endDay();
-      });
-      addChoice("곰을 감싸준다", function(){
-        playSfx("choice");
-        state.vars.affBear += 2;
-        pushBacklog("선택","곰을 감싸준다");
-        endDay();
-      });
-      addChoice("둘 다에게 사과를 요구한다", function(){
-        playSfx("choice");
-        state.vars.affBear -= 1;
-        state.vars.affTiger -= 1;
-        shakeStage();
-        pushBacklog("선택","둘 다에게 사과를 요구한다");
-        endDay();
-      });
-    }
-  };
-}
-
-function eventRandomDream(){
-  return {
-    lines: [
-      { who:"system", scene:"cavenight", slots:{ L:null, C:null, R:null },
-        text:"DAY " + state.day + "\n랜덤 이벤트: 밤, 이상한 꿈을 꾼다.\n\n“21일이 끝나면, 선택하지 못한 쪽은…”" },
-      { who:"hwanung", text:"…그 뒤가 들리지 않는다." }
-    ],
-    after: function(){
-      addChoice("내일을 준비한다", function(){
-        playSfx("choice");
-        pushBacklog("선택","내일을 준비한다");
-        endDay();
-      });
-    }
-  };
-}
-
-function startMarriageFinal(){
-  var b = state.vars.affBear;
-  var t = state.vars.affTiger;
-  var rec = (b === t) ? "동점" : (b > t ? "곰" : "호랑이");
-
-  startScript([
-    { who:"system", scene:"palace",
-      slots:{ L:{who:"tiger", key:"tiger_neutral"}, C:null, R:{who:"bear", key:"bear_neutral"} },
-      text:"21일이 지났다.\n이제 결혼 상대를 정해야 한다.\n\n(현재 호감도: 곰 " + b + " / 호랑이 " + t + ")",
-      effects:["shakeUI"] },
-    { who:"system", text:"“당신의 선택은 곧 ‘새로운 시대의 시작’.”\n추천: " + rec }
-  ], function(){
-    addChoice("곰(웅혜)와 결혼한다", function(){
-      playSfx("choice");
-      state.partnerLocked = "bear";
-      pushBacklog("선택","곰과 결혼");
-      endingBear();
-    });
-    addChoice("호랑이(호린)과 결혼한다", function(){
-      playSfx("choice");
-      state.partnerLocked = "tiger";
-      pushBacklog("선택","호랑이와 결혼");
-      endingTiger();
-    });
-    addChoice("호감도 높은 쪽으로 자동 선택", function(){
-      playSfx("choice");
-      pushBacklog("선택","자동 선택");
-      if(b >= t){ state.partnerLocked="bear"; endingBear(); }
-      else{ state.partnerLocked="tiger"; endingTiger(); }
-    });
-  });
-}
-
-function endingBear(){
-  startScript([
-    { who:"system", scene:"forestday", slots:{ L:null, C:{who:"bear", key:"bear_smile"}, R:null },
-      text:"GOOD END?\n웅혜는 조용히 웃으며 당신의 손을 잡는다." },
-    { who:"bear", text:"…당신의 곁이, 이제 제 자리예요." },
-    { who:"system", text:"엔딩은 템플릿!" }
-  ], null);
-}
-function endingTiger(){
-  startScript([
-    { who:"system", scene:"forestday", slots:{ L:{who:"tiger", key:"tiger_smile"}, C:null, R:null },
-      text:"GOOD END?\n호린은 숨을 크게 들이쉬고, 웃으며 말한다." },
-    { who:"tiger", text:"후회는 싫어. 그래서… 네 옆에 설 거야." },
-    { who:"system", text:"엔딩은 템플릿!" }
-  ], null);
-}
-
-/* ============================================================================
-  10) Choices
-============================================================================ */
-function openChoices(){ $choiceOverlay.classList.add("open"); }
-function closeChoices(){
-  $choiceOverlay.classList.remove("open");
-  $choicePanel.innerHTML = "";
-}
-function choicesOpen(){ return $choiceOverlay.classList.contains("open"); }
-
-function addChoice(text, onClick){
-  if($choicePanel.childElementCount >= 3) return;
-
-  var btn = document.createElement("button");
-  btn.className = "midChoice";
-  var idx = $choicePanel.childElementCount + 1;
-  btn.textContent = String(idx) + ". " + text;
-
-  btn.addEventListener("click", function(){
-    closeChoices();
-    onClick();
-  });
-
-  $choicePanel.appendChild(btn);
-  openChoices();
-}
-
-/* ============================================================================
-  11) Save / Load
-============================================================================ */
-function normalizeState(obj){
-  if(!obj || typeof obj !== "object") return null;
-
-  if(typeof obj.day !== "number") obj.day = 1;
-  if(typeof obj.maxDay !== "number") obj.maxDay = 21;
-
-  if(!obj.vars || typeof obj.vars !== "object") obj.vars = { affBear:0, affTiger:0 };
-  if(typeof obj.vars.affBear !== "number") obj.vars.affBear = 0;
-  if(typeof obj.vars.affTiger !== "number") obj.vars.affTiger = 0;
-
-  if(!obj.scene) obj.scene = "forestday";
-  if(!obj.slots) obj.slots = { L:null, C:null, R:null };
-  if(!Array.isArray(obj.backlog)) obj.backlog = [];
-
-  if(!obj.gallery || typeof obj.gallery !== "object") obj.gallery = {};
-  if(!Array.isArray(obj.gallery.unlockedCg)) obj.gallery.unlockedCg = [];
-
-  if(obj.script && (!obj.script.lines || typeof obj.script.index !== "number")){
-    obj.script = null;
-  }
-  return obj;
-}
-
-function save(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    toast("저장 완료!");
-  }catch(e){
-    toast("저장 실패(용량/권한 문제)");
-  }
-}
-
-function load(){
-  var raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw){ toast("저장 데이터가 없어요."); return; }
-
-  try{
-    var obj = JSON.parse(raw);
-    obj = normalizeState(obj);
-    if(!obj) throw new Error("bad");
-    state = obj;
-
-    toast("불러오기 완료!");
-    setBackground(state.scene || "forestday");
-    applySlots(state.slots || {L:null,C:null,R:null}, null);
-    updateHud();
-    updateBgmUI();
-    updateAutoUI();
-
-    if(state.script) renderCurrentLine();
-    else startDayEvent(null);
-  }catch(e){
-    toast("저장 데이터가 손상됐어요.");
-  }
-}
-
-function resetGame(){
-  state.day = 1;
-  state.maxDay = 21;
-  state.partnerLocked = null;
-  state.vars = { affBear: 0, affTiger: 0 };
-  state.script = null;
-  state.scene = "forestday";
-  state.slots = { L:null, C:null, R:null };
-  state.backlog = [];
-
-  updateHud();
-  setBackground("forestday");
-  applySlots({L:null,C:null,R:null}, null);
-}
-
-/* ============================================================================
-  12) Gallery
-============================================================================ */
-var cgAllKeys = [];
-var galleryPage = 0;
-var PAGE_SIZE = 4;
-var viewerIndex = 0;
-
 function isUnlockedCg(key){
   ensureGallery();
   return state.gallery.unlockedCg.indexOf(key) !== -1;
 }
-
 function getCgMeta(key){
-  var m = cgMeta[key];
-  if(m && typeof m === "object"){
-    return { title: m.title || key, desc: m.desc || "" };
-  }
   return { title: key, desc: "" };
 }
-
 function openGallery(){
   buildCgKeyList();
   galleryPage = 0;
@@ -1592,7 +1508,6 @@ function renderGalleryPage(){
   var totalPages = Math.ceil(total / PAGE_SIZE);
   if(galleryPage < 0) galleryPage = 0;
   if(galleryPage >= totalPages) galleryPage = totalPages - 1;
-
   $pageInfo.textContent = String(galleryPage + 1) + " / " + String(totalPages);
 
   var grid = document.createElement("div");
@@ -1605,18 +1520,14 @@ function renderGalleryPage(){
     (function(idx){
       var key = cgAllKeys[idx];
       var unlocked = isUnlockedCg(key);
-
       var item = document.createElement("div");
       item.className = "cgThumb" + (unlocked ? "" : " locked");
-
       var src = assets.cg[key] || "";
       var meta = getCgMeta(key);
-
-      var html = "";
-      html += '<img alt="' + escapeHtml(key) + '" src="' + escapeHtml(src) + '">';
-      html += '<div class="cgLabel">' + escapeHtml(meta.title) + '</div>';
-      html += '<div class="cgDesc">' + escapeHtml(meta.desc) + '</div>';
-      item.innerHTML = html;
+      item.innerHTML =
+        '<img alt="' + escapeHtml(key) + '" src="' + escapeHtml(src) + '">'
+        + '<div class="cgLabel">' + escapeHtml(meta.title) + '</div>'
+        + '<div class="cgDesc">' + escapeHtml(meta.desc) + '</div>';
 
       if(!unlocked){
         var lock = document.createElement("div");
@@ -1629,13 +1540,11 @@ function renderGalleryPage(){
         playSfx("click");
         openCgViewer(idx);
       });
-
       grid.appendChild(item);
     })(i);
   }
 
-  var filled = end - start;
-  for(var e=filled;e<PAGE_SIZE;e++){
+  for(var e=end-start;e<PAGE_SIZE;e++){
     var empty = document.createElement("div");
     empty.className = "cgThumb";
     empty.style.opacity = "0.25";
@@ -1646,20 +1555,14 @@ function renderGalleryPage(){
 
   $galleryBody.appendChild(grid);
 }
-
 function openCgViewer(idx){
   buildCgKeyList();
   if(cgAllKeys.length === 0) return;
-
-  if(idx < 0) idx = 0;
-  if(idx >= cgAllKeys.length) idx = cgAllKeys.length - 1;
-
-  viewerIndex = idx;
+  viewerIndex = Math.max(0, Math.min(idx, cgAllKeys.length - 1));
   renderCgViewer();
   $cgViewerModal.classList.add("open");
 }
 function closeCgViewer(){ $cgViewerModal.classList.remove("open"); }
-
 function renderCgViewer(){
   buildCgKeyList();
   if(cgAllKeys.length === 0) return;
@@ -1672,10 +1575,8 @@ function renderCgViewer(){
   $viewerCounter.textContent = String(viewerIndex + 1) + " / " + String(cgAllKeys.length);
   $viewerTitle.textContent = meta.title || key;
   $viewerDesc.textContent = meta.desc || "";
-
   $viewerImg.src = src;
 
-  // ✅ 잠김이면 wrapper에 locked 클래스 부여(이미지 흐리게/검게)
   if(unlocked){
     $viewerImgWrap.classList.remove("locked");
     $viewerLock.style.display = "none";
@@ -1684,11 +1585,9 @@ function renderCgViewer(){
     $viewerLock.style.display = "grid";
   }
 }
-
 function moveCg(delta){
   buildCgKeyList();
   if(cgAllKeys.length === 0) return;
-
   viewerIndex += delta;
   if(viewerIndex < 0) viewerIndex = 0;
   if(viewerIndex >= cgAllKeys.length) viewerIndex = cgAllKeys.length - 1;
@@ -1696,15 +1595,681 @@ function moveCg(delta){
 }
 
 /* ============================================================================
-  13) Bindings
+  12) Save / Load / Reset
+============================================================================ */
+function normalizeState(obj){
+  if(!obj || typeof obj !== "object") return null;
+  if(typeof obj.day !== "number") obj.day = 1;
+  if(typeof obj.maxDay !== "number") obj.maxDay = 21;
+  if(typeof obj.timeIndex !== "number") obj.timeIndex = 1;
+  if(typeof obj.energy !== "number") obj.energy = 100;
+  if(typeof obj.maxEnergy !== "number") obj.maxEnergy = 100;
+  if(!obj.scene) obj.scene = "room";
+  if(!Array.isArray(obj.backlog)) obj.backlog = [];
+  if(!obj.gallery || typeof obj.gallery !== "object") obj.gallery = {};
+  if(!Array.isArray(obj.gallery.unlockedCg)) obj.gallery.unlockedCg = [];
+
+  if(!obj.affection || typeof obj.affection !== "object") obj.affection = freshAffection();
+  var base = freshAffection();
+  for(var k in base){
+    if(typeof obj.affection[k] !== "number") obj.affection[k] = 0;
+  }
+
+  if(obj.script && (!obj.script.lines || typeof obj.script.index !== "number")){
+    obj.script = null;
+  }
+  return obj;
+}
+function save(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    toast("저장 완료!");
+  }catch(e){
+    toast("저장 실패");
+  }
+}
+function load(){
+  var raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw){
+    toast("저장 데이터가 없어요.");
+    return;
+  }
+  try{
+    var obj = JSON.parse(raw);
+    obj = normalizeState(obj);
+    if(!obj) throw new Error("bad");
+    state = obj;
+
+    updateHud();
+    updateBgmUI();
+    updateAutoUI();
+    refreshRoom();
+
+    if(state.script) renderCurrentLine();
+    else enterRoom("불러오기를 완료했습니다.");
+    toast("불러오기 완료!");
+  }catch(e){
+    toast("저장 데이터가 손상됐어요.");
+  }
+}
+function resetGame(){
+  state = {
+    day: 1,
+    maxDay: 21,
+    timeIndex: 1,
+    energy: 100,
+    maxEnergy: 100,
+    scene: "room",
+    backlog: [],
+    gallery: { unlockedCg: [] },
+    affection: freshAffection(),
+    script: null,
+    slots: {L:null,C:null,R:null}
+  };
+  updateHud();
+  refreshRoom();
+}
+
+/* ============================================================================
+  12.5) CSV Cutscene Loader
+============================================================================ */
+var CUTSCENE_CSV_URL = "./cutscenes.csv";
+var cutsceneTable = [];
+var cutsceneTableLoaded = false;
+
+function csvToArray(text){
+  var rows = [];
+  var row = [];
+  var cell = "";
+  var i = 0;
+  var inQuotes = false;
+
+  while(i < text.length){
+    var ch = text[i];
+    var next = text[i + 1];
+
+    if(inQuotes){
+      if(ch === '"'){
+        if(next === '"'){
+          cell += '"';
+          i += 2;
+          continue;
+        }else{
+          inQuotes = false;
+          i++;
+          continue;
+        }
+      }else{
+        cell += ch;
+        i++;
+        continue;
+      }
+    }else{
+      if(ch === '"'){
+        inQuotes = true;
+        i++;
+        continue;
+      }
+      if(ch === ","){
+        row.push(cell);
+        cell = "";
+        i++;
+        continue;
+      }
+      if(ch === "\r"){
+        i++;
+        continue;
+      }
+      if(ch === "\n"){
+        row.push(cell);
+        rows.push(row);
+        row = [];
+        cell = "";
+        i++;
+        continue;
+      }
+      cell += ch;
+      i++;
+    }
+  }
+
+  row.push(cell);
+  if(row.length > 1 || row[0] !== ""){
+    rows.push(row);
+  }
+  return rows;
+}
+
+function parseCsvObjects(text){
+  var arr = csvToArray(text);
+  if(!arr.length) return [];
+
+  var headers = arr[0].map(function(v){ return String(v || "").trim(); });
+  var out = [];
+
+  for(var i=1;i<arr.length;i++){
+    var line = arr[i];
+    if(!line || !line.length) continue;
+
+    var empty = true;
+    for(var c=0;c<line.length;c++){
+      if(String(line[c] || "").trim() !== ""){
+        empty = false;
+        break;
+      }
+    }
+    if(empty) continue;
+
+    var obj = {};
+    for(var j=0;j<headers.length;j++){
+      obj[headers[j]] = String(line[j] == null ? "" : line[j]).trim();
+    }
+    out.push(obj);
+  }
+  return out;
+}
+
+async function loadCutsceneCsv(url){
+  var target = url || CUTSCENE_CSV_URL;
+  var res = await fetch(target, { cache: "no-store" });
+  if(!res.ok){
+    throw new Error("CSV 로드 실패: " + res.status + " " + res.statusText);
+  }
+  var text = await res.text();
+  cutsceneTable = parseCsvObjects(text);
+  cutsceneTableLoaded = true;
+  return cutsceneTable;
+}
+
+function ensureArrayValue(str){
+  if(!str) return null;
+  var raw = String(str).trim();
+  if(!raw) return null;
+
+  var parts = raw.split("|").map(function(v){
+    return String(v || "").trim();
+  }).filter(Boolean);
+
+  return parts.length ? parts : null;
+}
+
+function buildSlotsFromCsvRow(row){
+  var L = row.charL ? { key: row.charL } : null;
+  var C = row.charC ? { key: row.charC } : null;
+  var R = row.charR ? { key: row.charR } : null;
+
+  if(!L && !C && !R) return null;
+  return { L:L, C:C, R:R };
+}
+
+function buildCutsceneLines(cutsceneName){
+  var rows = cutsceneTable
+    .filter(function(row){
+      return row.cutscene === cutsceneName;
+    })
+    .sort(function(a, b){
+      return Number(a.line || 0) - Number(b.line || 0);
+    });
+
+  return rows.map(function(row){
+    var line = {
+      who: row.who || "system",
+      scene: row.scene || "room",
+      text: row.text || ""
+    };
+
+    var slots = buildSlotsFromCsvRow(row);
+    if(slots) line.slots = slots;
+
+    var effects = ensureArrayValue(row.effects);
+    if(effects) line.effects = effects;
+
+    if(row.unlockCg) line.unlockCg = row.unlockCg;
+    if(row.sfx) line.sfx = row.sfx;
+    if(row.bgm) line.bgm = row.bgm;
+
+    return line;
+  });
+}
+
+function hasCutsceneRows(cutsceneName){
+  for(var i=0;i<cutsceneTable.length;i++){
+    if(cutsceneTable[i].cutscene === cutsceneName) return true;
+  }
+  return false;
+}
+
+async function playCutsceneFromCsv(cutsceneName, afterFn){
+  if(!cutsceneTableLoaded){
+    await loadCutsceneCsv();
+  }
+
+  if(!hasCutsceneRows(cutsceneName)){
+    throw new Error("CSV에 '" + cutsceneName + "' 컷씬이 없습니다.");
+  }
+
+  var lines = buildCutsceneLines(cutsceneName);
+  startScript(lines, afterFn);
+}
+
+/* ============================================================================
+  13) Game Logic
+============================================================================ */
+function rand(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+function clamp(v, min, max){
+  return Math.max(min, Math.min(max, v));
+}
+function getAffectionLabel(key){
+  return names[key] + " 호감도 " + state.affection[key];
+}
+function gainAffection(key, amount){
+  if(typeof state.affection[key] !== "number") state.affection[key] = 0;
+  state.affection[key] += amount;
+}
+
+function getDateCandidates(){
+  var out = [];
+  for(var i=0;i<heroineKeys.length;i++){
+    var k = heroineKeys[i];
+    if(state.affection[k] >= 50) out.push(k);
+  }
+  return out;
+}
+
+function timePoolKey(){
+  if(state.timeIndex === 0) return "dawn";
+  if(state.timeIndex === 1) return "morning";
+  if(state.timeIndex === 2) return "noon";
+  if(state.timeIndex === 3) return "evening";
+  return "midnight";
+}
+
+async function startPrologue(){
+  try{
+    await playCutsceneFromCsv("prologue", function(){
+      state.day = 1;
+      state.timeIndex = 1;
+      state.energy = 100;
+      enterRoom("환웅으로 눈을 뜬 1일차 아침이다.\n무얼 할까?");
+    });
+  }catch(err){
+    console.error(err);
+    toast("프롤로그 CSV를 불러오지 못했습니다.");
+    state.day = 1;
+    state.timeIndex = 1;
+    state.energy = 100;
+    enterRoom("프롤로그를 불러오지 못해 바로 거처에서 시작합니다.");
+  }
+}
+
+function enterRoom(message){
+  state.script = null;
+  setBackground("room");
+  applySlots({L:null,C:null,R:null});
+  setRoomUiVisible(true);
+  updateHud();
+  $speaker.textContent = "SYSTEM";
+  $text.textContent = message || (
+    "...다시 거처로 돌아왔다.\n"
+    + "동굴 입구를 클릭하면 행동을 선택할 수 있습니다.\n"
+    + "침대를 클릭하면 수면할 수 있습니다."
+  );
+  pushBacklog("SYSTEM", $text.textContent);
+}
+
+function refreshRoom(){
+  setBackground("room");
+  setRoomUiVisible(true);
+  updateHud();
+  $speaker.textContent = "SYSTEM";
+  $text.textContent = "환웅의 거처.\n동굴 입구를 클릭해 행동하고, 침대를 클릭해 수면할 수 있다.";
+  applySlots({L:null,C:null,R:null});
+}
+
+function spendEnergy(cost){
+  if(state.energy < cost){
+    toast("행동력이 부족합니다.");
+    return false;
+  }
+  state.energy -= cost;
+  state.energy = clamp(state.energy, 0, state.maxEnergy);
+  updateHud();
+  return true;
+}
+
+function advanceAfterAction(){
+  if(state.timeIndex === 4){
+    state.day += 1;
+    state.timeIndex = 2; // 심야에 행동하면 다음날 점심 기상
+    enterRoom("심야까지 움직인 탓에 다음날 점심이 되어서야 눈을 떴다.");
+    return;
+  }
+
+  state.timeIndex += 1;
+  state.timeIndex = clamp(state.timeIndex, 0, 4);
+
+  if(state.day > state.maxDay){
+    startEndingSummary();
+    return;
+  }
+
+  enterRoom(TIME_NAMES[state.timeIndex] + "이(가) 되었다.\n...다시 거처로 돌아왔다.");
+}
+
+function doSleep(){
+  var nextDayText = "";
+  if(state.timeIndex === 3){
+    state.day += 1;
+    state.timeIndex = 0; // 저녁에 자면 새벽
+    nextDayText = "일찍 잠든 덕분에 다음날 새벽에 눈을 떴다.";
+  }else if(state.timeIndex === 4){
+    state.day += 1;
+    state.timeIndex = 1; // 심야에 자면 아침
+    nextDayText = "푹 쉬고 다음날 아침에 눈을 떴다.";
+  }else{
+    state.timeIndex += 1; // 그냥 수면 -> 아침
+    nextDayText = "잠시 휴식을 취하고 눈을 떴다.";
+  }
+
+  state.energy = clamp(state.energy + 50, 0, state.maxEnergy);
+
+  if(state.day > state.maxDay){
+    startEndingSummary();
+    return;
+  }
+
+  enterRoom(nextDayText + "\n행동력이 50 회복되었다.");
+}
+
+function confirmSleep(){
+  showChoices([
+    { text: "잘까요? (행동력 +50)", onClick: function(){ doSleep(); } },
+    { text: "아직 안 잔다", onClick: function(){ enterRoom("잠은 조금 더 미루기로 했다."); } }
+  ]);
+}
+
+function openActionMenu(){
+  var dateCandidates = getDateCandidates();
+  showChoices([
+    {
+      text: "산책 -20",
+      onClick: function(){ openLocationMenu("walk"); }
+    },
+    {
+      text: "마을 방문 -10",
+      onClick: function(){ doTownVisit(); }
+    },
+    {
+      text: "탐색 -30",
+      onClick: function(){ openLocationMenu("explore"); }
+    },
+    {
+      text: "데이트 신청" + (dateCandidates.length ? "" : " (호감도 50 이상 필요)"),
+      disabled: !dateCandidates.length,
+      onClick: function(){ openDateMenu(); }
+    },
+    {
+      text: "돌아가기",
+      onClick: function(){ enterRoom("행동을 취소하고 다시 생각해보기로 했다."); }
+    }
+  ]);
+}
+
+function openLocationMenu(mode){
+  showChoices([
+    { text: "숲길", onClick: function(){ startFieldAction(mode, "forest"); } },
+    { text: "호수", onClick: function(){ startFieldAction(mode, "lake"); } },
+    { text: "들판", onClick: function(){ startFieldAction(mode, "field"); } },
+    { text: "산", onClick: function(){ startFieldAction(mode, "mountain"); } },
+    { text: "돌아가기", onClick: function(){ openActionMenu(); } }
+  ]);
+}
+
+function openDateMenu(){
+  var list = getDateCandidates();
+  var choices = [];
+  for(var i=0;i<list.length;i++){
+    (function(key){
+      choices.push({
+        text: names[key] + "에게 데이트를 신청한다 -25",
+        onClick: function(){ startDateEvent(key); }
+      });
+    })(list[i]);
+  }
+  choices.push({ text: "돌아가기", onClick: function(){ openActionMenu(); } });
+  showChoices(choices);
+}
+
+function locationToScene(location){
+  if(location === "forest") return "forestday";
+  if(location === "lake") return "forestday";
+  if(location === "field") return "forestday";
+  if(location === "mountain") return "forestsunset";
+  return "forestday";
+}
+
+function pickWalkHeroine(location){
+  var poolMap = WALK_TIME_POOL[timePoolKey()] || WALK_TIME_POOL.morning;
+  var pool = poolMap[location] || DWELLING[location] || heroineKeys;
+  return rand(pool);
+}
+
+function startFieldAction(mode, location){
+  var cost = mode === "walk" ? ACTION_COST.walk : ACTION_COST.explore;
+  if(!spendEnergy(cost)) return;
+
+  if(mode === "walk"){
+    var heroine = pickWalkHeroine(location);
+    startWalkEvent(heroine, location);
+    return;
+  }
+  startExploreEvent(location);
+}
+
+function heroineFlavor(key){
+  var map = {
+    rabbit: "가볍게 뛰어오며 먼저 인사를 건넨다.",
+    monkey: "나뭇가지 위에서 몸을 숙여 환웅을 내려다본다.",
+    tiger: "날카로운 시선으로 주변을 살피다 환웅에게 다가온다.",
+    snake: "조용히 모습을 드러내며 낮은 목소리로 말을 건다.",
+    cow: "느긋한 미소로 길을 함께 걷자고 한다.",
+    horse: "상쾌한 기세로 바람을 가르며 나타난다.",
+    sheep: "포근한 분위기로 조심스럽게 다가온다.",
+    bear: "묵직한 발걸음으로 다가와 곁에 선다.",
+    rat: "재빠르게 바위 뒤에서 튀어나와 상황을 살핀다.",
+    pig: "먹을거리를 들고 와 나눠 먹자고 한다.",
+    dog: "반갑게 들뜬 기색을 보인다.",
+    chicken: "또렷한 목소리로 오늘 일과를 캐묻는다.",
+    dragon: "어딘가 신비로운 분위기를 풍기며 나타난다."
+  };
+  return map[key] || "조용히 환웅 앞에 모습을 드러낸다.";
+}
+
+function randomSmallTalk(){
+  var talks = [
+    "짧은 대화였지만, 서로에 대해 조금 더 알게 된 느낌이다.",
+    "별것 아닌 한마디가 이상하게 오래 마음에 남는다.",
+    "사소한 순간인데도 분위기가 꽤 좋았다.",
+    "환웅은 그 표정이 이상하게 계속 떠오른다고 생각했다."
+  ];
+  return rand(talks);
+}
+
+function startWalkEvent(heroine, location){
+  var place = LOCATION_LABELS[location];
+  var scene = locationToScene(location);
+  var affGain = (state.timeIndex === 3 || state.timeIndex === 4) ? 4 : 3;
+
+  startScript([
+    {
+      who: "system",
+      scene: scene,
+      text: getTimeLabel() + "의 " + place + ".\n산책을 하던 환웅은 " + names[heroine] + "와(과) 마주쳤다."
+    },
+    {
+      who: heroine,
+      scene: scene,
+      text: heroineFlavor(heroine)
+    },
+    {
+      who: "hwanung",
+      scene: scene,
+      text: randomSmallTalk()
+    }
+  ], function(){
+    gainAffection(heroine, affGain);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +" + affGain);
+    advanceAfterAction();
+  });
+}
+
+function startExploreEvent(location){
+  var place = LOCATION_LABELS[location];
+  var scene = locationToScene(location);
+  var rewards = {
+    forest: ["약초", "버섯", "산열매"],
+    lake: ["물고기", "조개", "반짝이는 돌"],
+    field: ["곡식", "들꽃", "말린 풀잎"],
+    mountain: ["광석 조각", "희귀 약초", "고목 열매"]
+  };
+  var found = rand(rewards[location] || ["잡동사니"]);
+  var maybeHeroine = Math.random() < 0.35 ? rand(DWELLING[location] || heroineKeys) : null;
+
+  var lines = [
+    {
+      who: "system",
+      scene: scene,
+      text: getTimeLabel() + "의 " + place + "을(를) 탐색했다.\n" + found + "을(를) 손에 넣었다."
+    }
+  ];
+
+  if(maybeHeroine){
+    lines.push({
+      who: maybeHeroine,
+      scene: scene,
+      text: names[maybeHeroine] + "이(가) 탐색 도중 잠깐 모습을 드러냈다.\n짧게 도움을 주고 다시 자리를 떴다."
+    });
+  }
+
+  startScript(lines, function(){
+    if(maybeHeroine){
+      gainAffection(maybeHeroine, 2);
+      pushBacklog("SYSTEM", names[maybeHeroine] + " 호감도 +2");
+    }
+    advanceAfterAction();
+  });
+}
+
+function doTownVisit(){
+  if(!spendEnergy(ACTION_COST.town)) return;
+
+  var townPeople = ["pig","dog","chicken"];
+  var heroine = rand(townPeople);
+  startScript([
+    {
+      who: "system",
+      scene: "forestday",
+      text: "마을을 방문했다.\n장터 주변은 제법 활기차다."
+    },
+    {
+      who: heroine,
+      scene: "forestday",
+      text: names[heroine] + "이(가) 우연히 환웅을 발견하고 말을 걸어온다."
+    },
+    {
+      who: "hwanung",
+      scene: "forestday",
+      text: "잠깐의 마을 방문이었지만, 의외로 수확이 있었다."
+    }
+  ], function(){
+    gainAffection(heroine, 2);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +2");
+    advanceAfterAction();
+  });
+}
+
+function startDateEvent(heroine){
+  if(!spendEnergy(ACTION_COST.date)) return;
+
+  var datePlace = rand(["숲길", "호수", "마을", "신단"]);
+  startScript([
+    {
+      who: "system",
+      scene: "forestday",
+      text: names[heroine] + "에게 데이트를 신청했다.\n약속 장소는 " + datePlace + "."
+    },
+    {
+      who: heroine,
+      scene: "forestday",
+      text: "오늘만큼은 둘만의 시간을 보내자는 듯, 평소보다 가까운 분위기다."
+    },
+    {
+      who: "hwanung",
+      scene: "forestday",
+      text: "둘만의 시간이 길어질수록, 마음의 거리도 조금씩 가까워지는 것 같았다."
+    }
+  ], function(){
+    gainAffection(heroine, 8);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +8");
+    advanceAfterAction();
+  });
+}
+
+function startEndingSummary(){
+  var sorted = heroineKeys.slice().sort(function(a, b){
+    return state.affection[b] - state.affection[a];
+  });
+  var top = sorted[0];
+  var second = sorted[1];
+
+  startScript([
+    {
+      who: "system",
+      scene: "palace",
+      text:
+        "21일이 끝났다.\n"
+        + "가장 가까워진 인연은 " + names[top] + "이었다.\n"
+        + "(" + state.affection[top] + " / 2위 " + names[second] + " " + state.affection[second] + ")",
+      effects:["shakeUI"]
+    },
+    {
+      who: "system",
+      scene: "palace",
+      text:
+        "이제 이 데이터를 바탕으로 엔딩 분기나 고백 이벤트를 이어서 붙이면 된다.\n"
+        + "현재는 루프/시간/행동 시스템까지 구현된 상태다."
+    }
+  ], function(){
+    showChoices([
+      {
+        text: "타이틀로 돌아가기",
+        onClick: function(){
+          showTitle();
+          refreshRoom();
+        }
+      },
+      {
+        text: "처음부터 다시 시작",
+        onClick: function(){
+          resetGame();
+          hideTitle();
+          enterRoom("새로운 하루가 시작된다.");
+        }
+      }
+    ]);
+  });
+}
+
+/* ============================================================================
+  14) Bindings
 ============================================================================ */
 $btnNext.addEventListener("click", function(){ playSfx("click"); next(); });
-
 $btnAuto.addEventListener("click", function(){ playSfx("click"); setAuto(!autoEnabled); });
 $btnBacklog.addEventListener("click", function(){ playSfx("click"); openBacklog(); });
 $btnSave.addEventListener("click", function(){ playSfx("click"); save(); });
 $btnLoad.addEventListener("click", function(){ playSfx("click"); load(); });
-
 $btnBgm.addEventListener("click", function(){ playSfx("click"); toggleBgm(); });
 $btnTitle.addEventListener("click", function(){ playSfx("click"); showTitle(); });
 
@@ -1717,18 +2282,8 @@ $btnClearLog.addEventListener("click", function(){
 
 $btnGalleryClose.addEventListener("click", function(){ closeGallery(); });
 $btnUnlockAll.addEventListener("click", function(){ playSfx("click"); unlockAllCgs(); });
-
-$btnPrevPage.addEventListener("click", function(){
-  playSfx("click");
-  galleryPage -= 1;
-  renderGalleryPage();
-});
-$btnNextPage.addEventListener("click", function(){
-  playSfx("click");
-  galleryPage += 1;
-  renderGalleryPage();
-});
-
+$btnPrevPage.addEventListener("click", function(){ playSfx("click"); galleryPage -= 1; renderGalleryPage(); });
+$btnNextPage.addEventListener("click", function(){ playSfx("click"); galleryPage += 1; renderGalleryPage(); });
 $btnViewerClose.addEventListener("click", function(){ closeCgViewer(); });
 $btnCgPrev.addEventListener("click", function(){ playSfx("click"); moveCg(-1); });
 $btnCgNext.addEventListener("click", function(){ playSfx("click"); moveCg(1); });
@@ -1737,12 +2292,11 @@ $modal.addEventListener("click", function(e){ if(e.target === $modal) closeBackl
 $galleryModal.addEventListener("click", function(e){ if(e.target === $galleryModal) closeGallery(); });
 $cgViewerModal.addEventListener("click", function(e){ if(e.target === $cgViewerModal) closeCgViewer(); });
 
-/* Title buttons */
-$btnStart.addEventListener("click", function(){
+$btnStart.addEventListener("click", async function(){
   playSfx("click");
   hideTitle();
   resetGame();
-  startPrologue();
+  await startPrologue();
 });
 $btnContinue.addEventListener("click", function(){
   playSfx("click");
@@ -1765,10 +2319,11 @@ function canAdvanceByClick(){
   if($galleryModal.classList.contains("open")) return false;
   if($cgViewerModal.classList.contains("open")) return false;
   if($titleScreen.classList.contains("open")) return false;
+  if(!state.script) return false;
   return true;
 }
 function isUIControl(target){
-  return !!target.closest("button, .choiceOverlay, .modal, .btn, .controlsRow, .titleScreen");
+  return !!target.closest("button, .choiceOverlay, .modal, .btn, .controlsRow, .titleScreen, #roomLayer");
 }
 $dialogueBox.addEventListener("click", function(e){
   if(isUIControl(e.target)) return;
@@ -1802,12 +2357,12 @@ window.addEventListener("keydown", function(e){
     if(e.code === "ArrowRight"){ moveCg(1); return; }
   }
 
-  var idx = -1;
-  if(e.code === "Digit1") idx = 0;
-  if(e.code === "Digit2") idx = 1;
-  if(e.code === "Digit3") idx = 2;
-  if(idx !== -1 && $choicePanel.children[idx]){
-    $choicePanel.children[idx].click();
+  var num = -1;
+  if(/^Digit[1-9]$/.test(e.code)){
+    num = parseInt(e.code.replace("Digit",""), 10) - 1;
+  }
+  if(num !== -1 && $choicePanel.children[num]){
+    $choicePanel.children[num].click();
     return;
   }
 
@@ -1819,15 +2374,21 @@ window.addEventListener("keydown", function(e){
 });
 
 /* ============================================================================
-  14) Init
+  15) Init
 ============================================================================ */
+injectGameUiCss();
+ensureHudExtras();
+ensureRoomUi();
 applyAudio();
 updateHud();
 updateAutoUI();
 updateBgmUI();
-setBackground("forestday");
-applySlots({ L:null, C:null, R:null }, null);
+refreshRoom();
 showTitle();
 </script>
 </body>
 </html>
+
+
+
+
