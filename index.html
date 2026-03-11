@@ -1888,11 +1888,8 @@ function timePoolKey(){
 
 async function startPrologue(){
   try{
-    await playCutsceneFromCsv("prologue", function(){
-      state.day = 1;
-      state.timeIndex = 1;
-      state.energy = 100;
-      enterRoom("환웅으로 눈을 뜬 1일차 아침이다.\n무얼 할까?");
+    await playCutsceneFromCsv("prologue_1", function(){
+      openPrologueBranchChoice();
     });
   }catch(err){
     console.error(err);
@@ -1902,6 +1899,71 @@ async function startPrologue(){
     state.energy = 100;
     enterRoom("프롤로그를 불러오지 못해 바로 거처에서 시작합니다.");
   }
+}
+
+function openPrologueBranchChoice(){
+  showChoices([
+    {
+      text: "무슨 말을 하시는 건지...",
+      onClick: function(){
+        playCutsceneFromCsv("prologue_a", function(){
+          PrologueDeathScene();
+        }).catch(function(err){
+          console.error(err);
+          toast("prologue_a 컷씬을 불러오지 못했습니다.");
+        });
+      }
+    },
+    {
+      text: "ㅈ..잠시 생각할 시간을 주시겠어요?",
+      onClick: function(){
+        playCutsceneFromCsv("prologue_b", function(){
+          goToPrologueCommon();
+        }).catch(function(err){
+          console.error(err);
+          toast("prologue_b 컷씬을 불러오지 못했습니다.");
+        });
+      }
+    },
+	{
+      text: "(아무 말도 하지 않는다.)",
+      onClick: function(){
+        playCutsceneFromCsv("prologue_c", function(){
+          goToPrologueCommon();
+        }).catch(function(err){
+          console.error(err);
+          toast("prologue_b 컷씬을 불러오지 못했습니다.");
+        });
+      }
+    }
+  ]);
+}
+
+function goToPrologueCommon(){
+  playCutsceneFromCsv("prologue_common", function(){
+    state.day = 1;
+    state.timeIndex = 1;
+    state.energy = 100;
+    enterRoom("환웅으로 눈을 뜬 1일차 아침이다.\n무얼 할까?");
+  }).catch(function(err){
+    console.error(err);
+    toast("prologue_common 컷씬을 불러오지 못했습니다.");
+  });
+}
+
+function PrologueDeathScene(){
+  playCutsceneFromCsv("prologue_death", function(){
+    resetGame();
+    refreshRoom();
+    showTitle();
+    toast("프롤로그에서 사망했습니다.");
+  }).catch(function(err){
+    console.error(err);
+    toast("prologue_death 컷씬을 불러오지 못했습니다.");
+    resetGame();
+    refreshRoom();
+    showTitle();
+  });
 }
 
 function enterRoom(message){
