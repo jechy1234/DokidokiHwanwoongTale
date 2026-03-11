@@ -2238,185 +2238,127 @@ function resetGame(){
 }
 
 /* ============================================================================
-  12.5) CSV Cutscene Loader
+  12.5) Google Sheet Cutscene Loader
 ============================================================================ */
-var CUTSCENE_CSV_URL = "./cutscenes.csv";
+
+/*
+  네 구글 스프레드시트:
+  https://docs.google.com/spreadsheets/d/1zvmn0p1eSDqHpxhQuHgG7QEpnWvmIQtm1nLQvXR1zF8/edit?usp=sharing
+
+  기본 가정:
+  - 컷씬 데이터가 들어있는 탭 이름은 "script"
+  - 1행은 헤더
+  - 헤더 이름은 기존 CSV와 동일
+*/
+
+var GOOGLE_SHEET_ID = "1zvmn0p1eSDqHpxhQuHgG7QEpnWvmIQtm1nLQvXR1zF8";
+var GOOGLE_SHEET_TAB = "script";
+
 var cutsceneTable = [];
 var cutsceneTableLoaded = false;
 
-function csvToArray(text){
-  var rows = [];
-  var row = [];
-  var cell = "";
-  var i = 0;
-  var inQuotes = false;
-
-  while(i < text.length){
-    var ch = text[i];
-    var next = text[i + 1];
-
-    if(inQuotes){
-      if(ch === '"'){
-        if(next === '"'){
-          cell += '"';
-          i += 2;
-          continue;
-        }else{
-          inQuotes = false;
-          i++;
-          continue;
-        }
-      }else{
-        cell += ch;
-        i++;
-        continue;
-      }
-    }else{
-      if(ch === '"'){
-        inQuotes = true;
-        i++;
-        continue;
-      }
-      if(ch === ","){
-        row.push(cell);
-        cell = "";
-        i++;
-        continue;
-      }
-      if(ch === "\r"){
-        i++;
-        continue;
-      }
-      if(ch === "\n"){
-        row.push(cell);
-        rows.push(row);
-        row = [];
-        cell = "";
-        i++;
-        continue;
-      }
-      cell += ch;
-      i++;
-    }
+/*
+  Google Visualization 응답은
+  google.visualization.Query.setResponse({...});
+  이런 식으로 감싸져 오기 때문에 JSON 부분만 잘라내야 함
+*/
+function extractGoogleSheetJson(text){
+  var prefix = "google.visualization.Query.setResponse(";
+  var start = text.indexOf(prefix);
+  if(start === -1){
+    throw new Error("구글 시트 응답 형식이 올바르지 않습니다.");
   }
 
-  row.push(cell);
-  if(row.length > 1 || row[0] !== ""){
-    rows.push(row);
+  start += prefix.length;
+
+  var end = text.lastIndexOf(");");
+  if(end === -1){
+    end = text.length;
   }
-  return rows;
+
+  var jsonText = text.substring(start, end).trim();
+  return JSON.parse(jsonText);
 }
 
-function parseCsvObjects(text){
-  var arr = csvToArray(text);
-  if(!arr.length) return [];
+function cellValueToString(cell){
+  if(!cell) return "";
+  if(cell.f != null && cell.f !== "") return String(cell.f).trim();
+  if(cell.v == null) return "";
+  return String(cell.v).trim();
+}
 
-  var headers = arr[0].map(function(v){ return String(v || "").trim(); });
+function googleTableToObjects(table){
+  if(!table || !table.cols || !table.rows) return [];
+
+  var headers = table.cols.map(function(col, idx){
+    var label = String(col.label || "").trim();
+    var id = String(col.id || "").trim();
+
+    if(label) return label;
+    if(id) return id;
+    return "col" + idx;
+  });
+
   var out = [];
 
-  for(var i=1;i<arr.length;i++){
-    var line = arr[i];
-    if(!line || !line.length) continue;
-
-    var empty = true;
-    for(var c=0;c<line.length;c++){
-      if(String(line[c] || "").trim() !== ""){
-        empty = false;
-        break;
-      }
-    }
-    if(empty) continue;
+  for(var r=0; r<table.rows.length; r++){
+    var row = table.rows[r];
+    if(!row || !row.c) continue;
 
     var obj = {};
-    for(var j=0;j<headers.length;j++){
-      obj[headers[j]] = String(line[j] == null ? "" : line[j]).trim();
+    var hasValue = false;
+
+    for(var c=0; c<headers.length; c++){
+      var cell = row.c[c];
+      var value = cellValueToString(cell);
+
+      if(value !== "") hasValue = true;
+      obj[headers[c]] = value;
     }
-    out.push(obj);
+
+    if(hasValue){
+      out.push(obj);
+    }
   }
+
   return out;
 }
 
+function buildGoogleSheetUrl(sheetName){
+  var encodedSheet = encodeURIComponent(sheetName || GOOGLE_SHEET_TAB);
+
+  return (
+    "https://docs.google.com/spreadsheets/d/" +
+    GOOGLE_SHEET_ID +
+    "/gviz/tq?tqx=out:json&sheet=" +
+    encodedSheet +
+    "&_ts=" +
+    Date.now()
+  );
+}
+
 async function loadCutsceneCsv(url){
-  var target = url || CUTSCENE_CSV_URL;
+  var target = url || buildGoogleSheetUrl(GOOGLE_SHEET_TAB);
+
   var res = await fetch(target, { cache: "no-store" });
   if(!res.ok){
-    throw new Error("CSV 로드 실패: " + res.status + " " + res.statusText);
+    throw new Error("구글 시트 로드 실패: " + res.status + " " + res.statusText);
   }
+
   var text = await res.text();
-  cutsceneTable = parseCsvObjects(text);
+  var gviz = extractGoogleSheetJson(text);
+
+  if(gviz.status && gviz.status !== "ok"){
+    throw new Error("구글 시트 응답 오류: " + (gviz.errors ? JSON.stringify(gviz.errors) : gviz.status));
+  }
+
+  if(!gviz.table){
+    throw new Error("구글 시트 테이블 데이터가 없습니다.");
+  }
+
+  cutsceneTable = googleTableToObjects(gviz.table);
   cutsceneTableLoaded = true;
   return cutsceneTable;
-}
-
-function ensureArrayValue(str){
-  if(!str) return null;
-  var raw = String(str).trim();
-  if(!raw) return null;
-
-  var parts = raw.split("|").map(function(v){
-    return String(v || "").trim();
-  }).filter(Boolean);
-
-  return parts.length ? parts : null;
-}
-
-function buildSlotsFromCsvRow(row){
-  var L = row.charL ? { key: row.charL } : null;
-  var C = row.charC ? { key: row.charC } : null;
-  var R = row.charR ? { key: row.charR } : null;
-
-  if(!L && !C && !R) return null;
-  return { L:L, C:C, R:R };
-}
-
-function buildCutsceneLines(cutsceneName){
-  var rows = cutsceneTable
-    .filter(function(row){
-      return row.cutscene === cutsceneName;
-    })
-    .sort(function(a, b){
-      return Number(a.line || 0) - Number(b.line || 0);
-    });
-
-  return rows.map(function(row){
-    var line = {
-      who: row.who || "system",
-      scene: row.scene || "room",
-      text: row.text || ""
-    };
-
-    var slots = buildSlotsFromCsvRow(row);
-    if(slots) line.slots = slots;
-
-    var effects = ensureArrayValue(row.effects);
-    if(effects) line.effects = effects;
-
-    if(row.unlockCg) line.unlockCg = row.unlockCg;
-    if(row.sfx) line.sfx = row.sfx;
-    if(row.bgm) line.bgm = row.bgm;
-
-    return line;
-  });
-}
-
-function hasCutsceneRows(cutsceneName){
-  for(var i=0;i<cutsceneTable.length;i++){
-    if(cutsceneTable[i].cutscene === cutsceneName) return true;
-  }
-  return false;
-}
-
-async function playCutsceneFromCsv(cutsceneName, afterFn){
-  if(!cutsceneTableLoaded){
-    await loadCutsceneCsv();
-  }
-
-  if(!hasCutsceneRows(cutsceneName)){
-    throw new Error("CSV에 '" + cutsceneName + "' 컷씬이 없습니다.");
-  }
-
-  var lines = buildCutsceneLines(cutsceneName);
-  startScript(lines, afterFn);
 }
 
 /* ============================================================================
