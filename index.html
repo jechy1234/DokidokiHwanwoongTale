@@ -2241,123 +2241,78 @@ function resetGame(){
   12.5) Google Sheet Cutscene Loader
 ============================================================================ */
 
-/*
-  네 구글 스프레드시트:
-  https://docs.google.com/spreadsheets/d/1zvmn0p1eSDqHpxhQuHgG7QEpnWvmIQtm1nLQvXR1zF8/edit?usp=sharing
-
-  기본 가정:
-  - 컷씬 데이터가 들어있는 탭 이름은 "script"
-  - 1행은 헤더
-  - 헤더 이름은 기존 CSV와 동일
-*/
-
 var GOOGLE_SHEET_ID = "1zvmn0p1eSDqHpxhQuHgG7QEpnWvmIQtm1nLQvXR1zF8";
 var GOOGLE_SHEET_TAB = "script";
 
 var cutsceneTable = [];
 var cutsceneTableLoaded = false;
 
-/*
-  Google Visualization 응답은
-  google.visualization.Query.setResponse({...});
-  이런 식으로 감싸져 오기 때문에 JSON 부분만 잘라내야 함
-*/
 function extractGoogleSheetJson(text){
   var prefix = "google.visualization.Query.setResponse(";
   var start = text.indexOf(prefix);
-  if(start === -1){
-    throw new Error("구글 시트 응답 형식이 올바르지 않습니다.");
-  }
-
   start += prefix.length;
 
   var end = text.lastIndexOf(");");
-  if(end === -1){
-    end = text.length;
-  }
+  var jsonText = text.substring(start, end);
 
-  var jsonText = text.substring(start, end).trim();
   return JSON.parse(jsonText);
 }
 
 function cellValueToString(cell){
   if(!cell) return "";
-  if(cell.f != null && cell.f !== "") return String(cell.f).trim();
+  if(cell.f) return String(cell.f).trim();
   if(cell.v == null) return "";
   return String(cell.v).trim();
 }
 
 function googleTableToObjects(table){
-  if(!table || !table.cols || !table.rows) return [];
-
-  var headers = table.cols.map(function(col, idx){
-    var label = String(col.label || "").trim();
-    var id = String(col.id || "").trim();
-
-    if(label) return label;
-    if(id) return id;
-    return "col" + idx;
+  var headers = table.cols.map(function(col){
+    return (col.label || col.id || "").trim();
   });
 
   var out = [];
 
-  for(var r=0; r<table.rows.length; r++){
+  for(var r=0;r<table.rows.length;r++){
     var row = table.rows[r];
-    if(!row || !row.c) continue;
-
     var obj = {};
-    var hasValue = false;
 
-    for(var c=0; c<headers.length; c++){
+    for(var c=0;c<headers.length;c++){
       var cell = row.c[c];
-      var value = cellValueToString(cell);
-
-      if(value !== "") hasValue = true;
-      obj[headers[c]] = value;
+      obj[headers[c]] = cellValueToString(cell);
     }
 
-    if(hasValue){
-      out.push(obj);
-    }
+    out.push(obj);
   }
 
   return out;
 }
 
 function buildGoogleSheetUrl(sheetName){
-  var encodedSheet = encodeURIComponent(sheetName || GOOGLE_SHEET_TAB);
-
-  return (
-    "https://docs.google.com/spreadsheets/d/" +
-    GOOGLE_SHEET_ID +
-    "/gviz/tq?tqx=out:json&sheet=" +
-    encodedSheet +
-    "&_ts=" +
-    Date.now()
-  );
+  return "https://docs.google.com/spreadsheets/d/"
+    + GOOGLE_SHEET_ID
+    + "/gviz/tq?sheet="
+    + encodeURIComponent(sheetName)
+    + "&tqx=out:json";
 }
 
 async function loadCutsceneCsv(url){
+
   var target = url || buildGoogleSheetUrl(GOOGLE_SHEET_TAB);
 
-  var res = await fetch(target, { cache: "no-store" });
+  var res = await fetch(target);
+
   if(!res.ok){
-    throw new Error("구글 시트 로드 실패: " + res.status + " " + res.statusText);
+    throw new Error("구글 시트 로드 실패");
   }
 
   var text = await res.text();
-  var gviz = extractGoogleSheetJson(text);
 
-  if(gviz.status && gviz.status !== "ok"){
-    throw new Error("구글 시트 응답 오류: " + (gviz.errors ? JSON.stringify(gviz.errors) : gviz.status));
-  }
+  var json = extractGoogleSheetJson(text);
 
-  if(!gviz.table){
-    throw new Error("구글 시트 테이블 데이터가 없습니다.");
-  }
+  cutsceneTable = googleTableToObjects(json.table);
 
-  cutsceneTable = googleTableToObjects(gviz.table);
   cutsceneTableLoaded = true;
+
   return cutsceneTable;
 }
 
