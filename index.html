@@ -54,12 +54,12 @@
 
 	.slot{
 	  position:absolute;
-	  bottom:var(--boxH);   /* 대화창 위 기준 */
+	  bottom:calc(var(--boxH) - 170px);
 	  display:flex;
 	  justify-content:center;
 	  align-items:flex-end;
 	  width:32vw;
-	  height:calc(100vh - var(--boxH));
+	  height:calc(100vh - var(--boxH) + 170px);
 	  overflow:visible;
 	}
 
@@ -80,8 +80,8 @@
 	/* 캐릭터 크기/위치 */
 	.char{
 	  width:auto;
-	  height:calc(100vh - var(--boxH) + 300px);
-	  max-width:30vw;
+	  height:calc(100vh - var(--boxH) + 520px); /* 지금보다 훨씬 크게 */
+	  max-width:42vw;                            /* 가로도 넉넉하게 */
 	  object-fit:contain;
 	  object-position:center bottom;
 
@@ -90,16 +90,15 @@
 	  transition: opacity .18s ease, filter .18s ease;
 	}
 
-	.char.show{
-	  opacity:1;
-	}
-
-	/* 중앙만 따로 키우지 않음 */
 	#charL,
 	#charC,
 	#charR{
-	  height:calc(100vh - var(--boxH) + 300px);
-	  max-width:30vw;
+	  height:calc(100vh - var(--boxH) + 520px);
+	  max-width:42vw;
+	}
+
+	.char.show{
+	  opacity:1;
 	}
 
 	.char.dim{
@@ -116,6 +115,8 @@
 	@media (min-width: 1800px){
 	  .slot{
 		width:30vw;
+		bottom:calc(var(--boxH) - 190px);
+		height:calc(100vh - var(--boxH) + 190px);
 	  }
 
 	  #slotL{ left:2vw; }
@@ -124,8 +125,8 @@
 	  #charL,
 	  #charC,
 	  #charR{
-		height:calc(100vh - var(--boxH) + 180px);
-		max-width:27vw;
+		height:calc(100vh - var(--boxH) + 600px);
+		max-width:40vw;
 	  }
 	}
 
@@ -133,6 +134,8 @@
 	@media (max-width: 1366px){
 	  .slot{
 		width:34vw;
+		bottom:calc(var(--boxH) - 140px);
+		height:calc(100vh - var(--boxH) + 140px);
 	  }
 
 	  #slotL{ left:1vw; }
@@ -141,8 +144,8 @@
 	  #charL,
 	  #charC,
 	  #charR{
-		height:calc(100vh - var(--boxH) - 90px);
-		max-width:32vw;
+		height:calc(100vh - var(--boxH) + 430px);
+		max-width:44vw;
 	  }
 	}
 
