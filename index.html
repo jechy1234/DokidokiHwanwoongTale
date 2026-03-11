@@ -554,6 +554,143 @@
       .cgThumb img{ height: 130px; }
       .viewerMetaLeft #viewerTitle, .viewerMetaLeft #viewerDesc{ max-width: 44vw; }
     }
+    /* ===== Death Scene ===== */
+    .deathScreen{
+      position:absolute; inset:0;
+      display:none;
+      z-index:95;
+      background:#000;
+      pointer-events:auto;
+    }
+    .deathScreen.open{ display:block; }
+    .deathBg{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+    }
+    .deathMenu{
+      position:absolute;
+      right:3vw;
+      bottom:3vh;
+      display:flex;
+      gap:10px;
+      z-index:2;
+    }
+
+    /* ===== Save / Load Slots ===== */
+    .slotGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .saveSlotCard{
+      min-height:150px;
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .saveSlotCard:hover{
+      background: rgba(18,26,44,.42);
+      transform: translateY(-1px);
+    }
+    .saveSlotHead{
+      font-size:13px;
+      color:rgba(242,246,255,.72);
+    }
+    .saveSlotTitle{
+      font-size:16px;
+      font-weight:800;
+      color:rgba(242,246,255,.94);
+    }
+    .saveSlotMeta{
+      font-size:12px;
+      line-height:1.6;
+      color:rgba(242,246,255,.72);
+      white-space:pre-line;
+    }
+
+    /* ===== Heroine Codex ===== */
+    .codexWrap{
+      display:grid;
+      grid-template-columns: 260px 1fr;
+      gap:14px;
+      min-height: 520px;
+    }
+    .codexList{
+      overflow:auto;
+      border-right:1px solid rgba(255,255,255,.08);
+      padding-right:10px;
+      display:grid;
+      gap:8px;
+      align-content:start;
+    }
+    .codexItem{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:8px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.16);
+      cursor:pointer;
+    }
+    .codexItem:hover,
+    .codexItem.active{
+      background: rgba(18,26,44,.52);
+    }
+    .codexThumb{
+      width:58px;
+      height:58px;
+      border-radius:12px;
+      object-fit:cover;
+      background:#111;
+      flex-shrink:0;
+    }
+    .codexName{
+      font-weight:800;
+      font-size:14px;
+    }
+    .codexInfo{
+      padding:8px 6px;
+      display:grid;
+      gap:10px;
+      align-content:start;
+    }
+    .codexPortrait{
+      width:min(280px, 100%);
+      aspect-ratio: 1 / 1;
+      border-radius:18px;
+      object-fit:cover;
+      border:1px solid rgba(255,255,255,.10);
+      background:#111;
+    }
+    .codexDesc{
+      white-space:pre-line;
+      line-height:1.7;
+      color:rgba(242,246,255,.88);
+    }
+
+    @media (max-width: 900px){
+      .codexWrap{
+        grid-template-columns: 1fr;
+      }
+      .codexList{
+        border-right:0;
+        border-bottom:1px solid rgba(255,255,255,.08);
+        padding-right:0;
+        padding-bottom:10px;
+        max-height: 220px;
+      }
+      .slotGrid{
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -694,25 +831,82 @@
             <div class="viewerLock" id="viewerLock" style="display:none;">아직 해금되지 않았습니다.</div>
           </div>
         </div>
-
-        <!-- ✅ 하단: 중앙정렬 카운터 + 우측하단 넘기기 -->
-        <div class="viewerFoot">
-          <div class="viewerMetaLeft">
-            <div id="viewerTitle">-</div>
-            <div id="viewerDesc">-</div>
-          </div>
-
-          <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
-
-          <div class="viewerNavRight">
-            <span class="tri" id="btnCgPrev">◁</span>
-            <span class="kbd">(CG)</span>
-            <span class="tri" id="btnCgNext">▷</span>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+	<div class="viewerFoot">
+	  <div class="viewerMetaLeft">
+		<div id="viewerTitle"></div>
+		<div id="viewerDesc"></div>
+	  </div>
+
+	  <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
+
+	  <div class="viewerNavRight">
+		<span class="tri" id="btnCgPrev">◀</span>
+		<span class="kbd">←/→</span>
+		<span class="tri" id="btnCgNext">▶</span>
+	  </div>
+	</div>
+
+	</div>
+	</div>
+
+
+	<!-- Save / Load Modal -->
+	<div class="modal" id="saveLoadModal">
+	  <div class="modalBox">
+
+		<div class="modalHead">
+		  <div class="modalHeadLeft">
+			<div><b id="saveLoadTitle">저장</b> <span class="kbd">Esc=닫기</span></div>
+		  </div>
+		  <div class="modalHeadRight">
+			<div class="btn" id="btnSaveLoadClose">Close</div>
+		  </div>
+		</div>
+
+		<div class="modalBody">
+		  <div class="slotGrid" id="saveLoadGrid"></div>
+		</div>
+
+		<div class="modalFoot">
+		  <div class="kbd">슬롯을 클릭하면 저장 또는 불러오기가 실행됩니다.</div>
+		</div>
+
+	  </div>
+	</div>
+
+
+	<!-- Heroine Codex Modal -->
+	<div class="modal" id="codexModal">
+	  <div class="modalBox" style="width:min(1080px,98vw);height:min(86vh,860px);">
+
+		<div class="modalHead">
+		  <div class="modalHeadLeft">
+			<div><b>히로인 도감</b> <span class="kbd">L / Esc=닫기</span></div>
+		  </div>
+		  <div class="modalHeadRight">
+			<div class="btn" id="btnCodexClose">Close</div>
+		  </div>
+		</div>
+
+		<div class="modalBody">
+		  <div class="codexWrap">
+			<div class="codexList" id="codexList"></div>
+			<div class="codexInfo" id="codexInfo"></div>
+		  </div>
+		</div>
+
+	  </div>
+	</div>
+
+
+	<!-- Death Scene -->
+	<div class="deathScreen" id="deathScreen">
+	  <img class="deathBg" id="deathBg" alt="death scene">
+	  <div class="deathMenu">
+		<button class="titleBtn" id="btnDeathToTitle">메인화면으로</button>
+	  </div>
+	</div>
 
 <script>
 /* ============================================================================
@@ -737,7 +931,10 @@ var assets = {
     cave_morning:"assets/bg/cave_morning.png",
     cave_noon:   "assets/bg/cave_noon.png",
     cave_evening:"assets/bg/cave_evening.png",
-    cave_midnight:"assets/bg/cave_midnight.png"
+    cave_midnight:"assets/bg/cave_midnight.png",
+	
+	/* 데스씬 이미지들 */
+    death_lonely: "assets/bg/데드씬고독사.png",
   },
 
   cg: {
@@ -765,7 +962,23 @@ var assets = {
 	rabbit_default: "assets/char/rabbit_default.png",
 	dragon_default: "assets/char/dragon_default.png"
   },
-
+  
+  portrait: {
+    rabbit: "assets/portrait/rabbit.png",
+    monkey: "assets/portrait/monkey.png",
+    tiger: "assets/portrait/tiger.png",
+    snake: "assets/portrait/snake.png",
+    cow: "assets/portrait/cow.png",
+    horse: "assets/portrait/horse.png",
+    sheep: "assets/portrait/sheep.png",
+    bear: "assets/portrait/bear.png",
+    rat: "assets/portrait/rat.png",
+    pig: "assets/portrait/pig.png",
+    dog: "assets/portrait/dog.png",
+    chicken: "assets/portrait/chicken.png",
+    dragon: "assets/portrait/dragon.png"
+  },
+  
   bgm: {
 	main: "assets/audio/bgm.mp3",
 	mystic: "assets/audio/mystic.mp3",
@@ -806,20 +1019,29 @@ var heroineKeys = [
 /* ============================================================================
   1) State / Storage
 ============================================================================ */
-var STORAGE_KEY = "hwanung_schedule_save_v1";
+var STORAGE_KEY = "hwanung_schedule_save_v2";
+var SLOT_STORAGE_KEY = "hwanung_schedule_slots_v1";
+var SAVE_SLOT_COUNT = 4;
 
 var state = {
   day: 1,
   maxDay: 21,
-  timeIndex: 1,           // 0 새벽 / 1 아침 / 2 점심 / 3 저녁 / 4 심야
+  timeIndex: 1,
   energy: 100,
-  maxEnergy: 100,
+  maxEnergy: 200,
   scene: "room",
+  currentLocation: "room",
   backlog: [],
   gallery: { unlockedCg: [] },
   affection: {},
   script: null,
-  slots: { L:null, C:null, R:null }
+  slots: { L:null, C:null, R:null },
+  eventSeen: {},
+  heroineSeen: {},
+  deathScene: {
+    active: false,
+    bgKey: ""
+  }
 };
 
 function freshAffection(){
@@ -828,6 +1050,17 @@ function freshAffection(){
   return map;
 }
 state.affection = freshAffection();
+
+function freshEventSeen(){
+  return {};
+}
+function freshHeroineSeen(){
+  var map = {};
+  for(var i=0;i<heroineKeys.length;i++) map[heroineKeys[i]] = false;
+  return map;
+}
+state.eventSeen = freshEventSeen();
+state.heroineSeen = freshHeroineSeen();
 
 var TIME_NAMES = ["새벽", "아침", "점심", "저녁", "심야"];
 var TIME_ICONS = ["🌅", "🌄", "☀️", "🌙", "💤"];
@@ -857,46 +1090,175 @@ var DWELLING = {
   shrine: ["chicken","dragon"]
 };
 
-var WALK_TIME_POOL = {
-  dawn: {
-    forest: ["rabbit","monkey","bear"],
-    lake: ["snake","tiger"],
-    field: ["horse","cow"],
-    mountain: ["bear","rat"],
-    village: ["dog","pig"],
-    shrine: ["dragon","chicken"]
+var HEROINE_DATABASE = {
+  rabbit: {
+    name: "묘묘",
+    portrait: "assets/portrait/rabbit.png",
+    spawn: {
+      dawn: ["forest"],
+      morning: ["forest"],
+      noon: ["lake"],
+      evening: ["forest"],
+      midnight: ["mountain"]
+    }
   },
-  morning: {
-    forest: ["rabbit","dog","chicken"],
-    lake: ["tiger","snake"],
-    field: ["cow","horse","sheep"],
-    mountain: ["bear","rat"],
-    village: ["pig","dog"],
-    shrine: ["chicken","dragon"]
+  monkey: {
+    name: "지원",
+    portrait: "assets/portrait/monkey.png",
+    spawn: {
+      dawn: ["forest"],
+      morning: ["forest"],
+      noon: ["forest"],
+      evening: ["village"],
+      midnight: ["forest"]
+    }
   },
-  noon: {
-    forest: ["rabbit","monkey"],
-    lake: ["tiger","snake"],
-    field: ["cow","horse","sheep"],
-    mountain: ["bear","rat"],
-    village: ["pig","dog"],
-    shrine: ["dragon","chicken"]
+  tiger: {
+    name: "호린",
+    portrait: "assets/portrait/tiger.png",
+    spawn: {
+      dawn: ["lake"],
+      morning: ["lake"],
+      noon: ["lake"],
+      evening: ["mountain"],
+      midnight: ["lake"]
+    }
   },
-  evening: {
-    forest: ["rabbit","monkey"],
-    lake: ["tiger","snake"],
-    field: ["cow","horse","sheep"],
-    mountain: ["snake","bear"],
-    village: ["pig","dog"],
-    shrine: ["chicken","dragon"]
+  snake: {
+    name: "설아",
+    portrait: "assets/portrait/snake.png",
+    spawn: {
+      dawn: ["lake"],
+      morning: ["mountain"],
+      noon: ["lake"],
+      evening: ["mountain"],
+      midnight: ["mountain"]
+    }
   },
-  midnight: {
-    forest: ["monkey","rabbit"],
-    lake: ["snake","dragon"],
-    field: ["horse","rat"],
-    mountain: ["bear","snake","rat"],
-    village: ["dog","pig"],
-    shrine: ["dragon","chicken"]
+  cow: {
+    name: "우정",
+    portrait: "assets/portrait/cow.png",
+    spawn: {
+      dawn: ["field"],
+      morning: ["field"],
+      noon: ["field"],
+      evening: ["village"],
+      midnight: []
+    }
+  },
+  horse: {
+    name: "마리",
+    portrait: "assets/portrait/horse.png",
+    spawn: {
+      dawn: ["field"],
+      morning: ["field"],
+      noon: ["field"],
+      evening: ["field"],
+      midnight: ["field"]
+    }
+  },
+  sheep: {
+    name: "미연",
+    portrait: "assets/portrait/sheep.png",
+    spawn: {
+      dawn: [],
+      morning: ["field"],
+      noon: ["field"],
+      evening: ["field"],
+      midnight: []
+    }
+  },
+  bear: {
+    name: "웅혜",
+    portrait: "assets/portrait/bear.png",
+    spawn: {
+      dawn: ["mountain"],
+      morning: ["mountain"],
+      noon: ["lake"],
+      evening: ["forest"],
+      midnight: ["mountain"]
+    }
+  },
+  rat: {
+    name: "서연",
+    portrait: "assets/portrait/rat.png",
+    spawn: {
+      dawn: ["mountain"],
+      morning: ["village"],
+      noon: ["mountain"],
+      evening: ["village"],
+      midnight: ["field"]
+    }
+  },
+  pig: {
+    name: "복희",
+    portrait: "assets/portrait/pig.png",
+    spawn: {
+      dawn: [],
+      morning: ["village"],
+      noon: ["village"],
+      evening: ["village"],
+      midnight: ["village"]
+    }
+  },
+  dog: {
+    name: "수윤",
+    portrait: "assets/portrait/dog.png",
+    spawn: {
+      dawn: ["village"],
+      morning: ["forest"],
+      noon: ["village"],
+      evening: ["village"],
+      midnight: ["village"]
+    }
+  },
+  chicken: {
+    name: "유채",
+    portrait: "assets/portrait/chicken.png",
+    spawn: {
+      dawn: ["shrine"],
+      morning: ["shrine"],
+      noon: ["shrine"],
+      evening: ["shrine"],
+      midnight: ["shrine"]
+    }
+  },
+  dragon: {
+    name: "유진",
+    portrait: "assets/portrait/dragon.png",
+    spawn: {
+      dawn: ["shrine"],
+      morning: ["shrine"],
+      noon: ["mountain"],
+      evening: ["shrine"],
+      midnight: ["mountain"]
+    }
+  }
+};
+
+/* 
+  컷씬 조건 테이블
+  id는 내부 식별용
+  cutscene은 CSV의 cutscene 이름
+*/
+var AFFECTION_EVENTS = [
+  {
+    id: "rabbit_30_forest_dawn_walk",
+    heroine: "rabbit",
+    time: "dawn",
+    location: "forest",
+    action: "walk",
+    minAffection: 30,
+    cutscene: "rabbit_30"
+  },
+  {
+    id: "dragon_50_mountain_midnight_walk",
+    heroine: "dragon",
+    time: "midnight",
+    location: "mountain",
+    action: "walk",
+    minAffection: 50,
+    cutscene: "dragon_50"
   }
 };
 
@@ -962,6 +1324,140 @@ var $viewerDesc = document.getElementById("viewerDesc");
 
 var $hudLeft = document.querySelector(".hudLeft");
 var $hudRight = document.querySelector(".hudRight");
+
+var $saveLoadModal = document.getElementById("saveLoadModal");
+var $saveLoadTitle = document.getElementById("saveLoadTitle");
+var $saveLoadGrid = document.getElementById("saveLoadGrid");
+var $btnSaveLoadClose = document.getElementById("btnSaveLoadClose");
+
+var $codexModal = document.getElementById("codexModal");
+var $codexList = document.getElementById("codexList");
+var $codexInfo = document.getElementById("codexInfo");
+var $btnCodexClose = document.getElementById("btnCodexClose");
+
+var saveLoadMode = "save";
+
+function getSlotStorage(){
+  try{
+    var raw = localStorage.getItem(SLOT_STORAGE_KEY);
+    if(!raw) return [null, null, null, null];
+    var arr = JSON.parse(raw);
+    if(!Array.isArray(arr)) return [null, null, null, null];
+    while(arr.length < SAVE_SLOT_COUNT) arr.push(null);
+    return arr.slice(0, SAVE_SLOT_COUNT);
+  }catch(e){
+    return [null, null, null, null];
+  }
+}
+
+function setSlotStorage(arr){
+  localStorage.setItem(SLOT_STORAGE_KEY, JSON.stringify(arr));
+}
+
+function getSaveMeta(snapshot){
+  return {
+    savedAt: new Date().toLocaleString("ko-KR"),
+    day: snapshot.day,
+    timeIndex: snapshot.timeIndex,
+    location: snapshot.currentLocation || "room"
+  };
+}
+
+function deepCopyState(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function renderSaveLoadSlots(){
+  var slots = getSlotStorage();
+  $saveLoadGrid.innerHTML = "";
+
+  for(var i=0; i<SAVE_SLOT_COUNT; i++){
+    (function(index){
+      var slot = slots[index];
+      var card = document.createElement("div");
+      card.className = "saveSlotCard";
+
+      if(!slot){
+        card.innerHTML =
+          '<div class="saveSlotHead">슬롯 ' + (index + 1) + '</div>' +
+          '<div class="saveSlotTitle">(텅 빈 슬롯입니다.)</div>' +
+          '<div class="saveSlotMeta">클릭하여 ' + (saveLoadMode === "save" ? "저장" : "불러오기") + '할 수 있습니다.</div>';
+      }else{
+        card.innerHTML =
+          '<div class="saveSlotHead">슬롯 ' + (index + 1) + '</div>' +
+          '<div class="saveSlotTitle">DAY ' + slot.meta.day + ' · ' + TIME_NAMES[slot.meta.timeIndex] + '</div>' +
+          '<div class="saveSlotMeta">현재 위치: ' + getLocationLabel(slot.meta.location) + '<br>' +
+          '저장 시간: ' + slot.meta.savedAt + '</div>';
+      }
+
+      card.addEventListener("click", function(){
+        if(saveLoadMode === "save"){
+          saveToSlot(index);
+        }else{
+          loadFromSlot(index);
+        }
+      });
+
+      $saveLoadGrid.appendChild(card);
+    })(i);
+  }
+}
+
+function openSaveLoadModal(mode){
+  saveLoadMode = mode;
+  $saveLoadTitle.textContent = mode === "save" ? "저장" : "불러오기";
+  renderSaveLoadSlots();
+  $saveLoadModal.classList.add("open");
+}
+
+function closeSaveLoadModal(){
+  $saveLoadModal.classList.remove("open");
+}
+
+function saveToSlot(index){
+  try{
+    var slots = getSlotStorage();
+    var snapshot = deepCopyState(state);
+    snapshot.script = null;
+    slots[index] = {
+      meta: getSaveMeta(snapshot),
+      data: snapshot
+    };
+    setSlotStorage(slots);
+    renderSaveLoadSlots();
+    toast((index + 1) + "번 슬롯에 저장 완료!");
+  }catch(e){
+    console.error(e);
+    toast("저장 실패");
+  }
+}
+
+function loadFromSlot(index){
+  var slots = getSlotStorage();
+  if(!slots[index]){
+    toast("빈 슬롯입니다.");
+    return;
+  }
+
+  try{
+    var obj = normalizeState(deepCopyState(slots[index].data));
+    state = obj;
+
+    updateHud();
+    updateBgmUI();
+    updateAutoUI();
+    refreshRoom();
+
+    if(state.script) renderCurrentLine();
+    else enterRoom("불러오기를 완료했습니다.");
+
+    closeSaveLoadModal();
+    toast((index + 1) + "번 슬롯 불러오기 완료!");
+  }catch(e){
+    console.error(e);
+    toast("불러오기 실패");
+  }
+}
 
 /* ============================================================================
   3) Audio
@@ -1233,6 +1729,63 @@ function timeKey(){
 }
 function getTimeLabel(){
   return TIME_ICONS[state.timeIndex] + " " + TIME_NAMES[state.timeIndex];
+}
+
+function getTimeKey(){
+  if(state.timeIndex === 0) return "dawn";
+  if(state.timeIndex === 1) return "morning";
+  if(state.timeIndex === 2) return "noon";
+  if(state.timeIndex === 3) return "evening";
+  return "midnight";
+}
+
+function getLocationLabel(location){
+  return LOCATION_LABELS[location] || location;
+}
+
+function getHeroinePortrait(key){
+  if(assets.portrait && assets.portrait[key]) return assets.portrait[key];
+  if(HEROINE_DATABASE[key] && HEROINE_DATABASE[key].portrait) return HEROINE_DATABASE[key].portrait;
+  return assets.char[key + "_default"] || assets.char.hwanung_sd || "";
+}
+
+function getAvailableHeroines(location){
+  var time = getTimeKey();
+  var result = [];
+  for(var i=0;i<heroineKeys.length;i++){
+    var key = heroineKeys[i];
+    var info = HEROINE_DATABASE[key];
+    if(!info || !info.spawn || !info.spawn[time]) continue;
+    if(info.spawn[time].indexOf(location) !== -1){
+      result.push(key);
+    }
+  }
+  return result;
+}
+
+function markHeroineSeen(key){
+  if(!state.heroineSeen) state.heroineSeen = freshHeroineSeen();
+  state.heroineSeen[key] = true;
+}
+
+function getTriggeredEvent(action, location, heroine){
+  var time = getTimeKey();
+  for(var i=0;i<AFFECTION_EVENTS.length;i++){
+    var ev = AFFECTION_EVENTS[i];
+    if(ev.action !== action) continue;
+    if(ev.location !== location) continue;
+    if(ev.time !== time) continue;
+    if(ev.heroine !== heroine) continue;
+    if((state.affection[heroine] || 0) < ev.minAffection) continue;
+    if(state.eventSeen && state.eventSeen[ev.id]) continue;
+    return ev;
+  }
+  return null;
+}
+
+function setEventSeen(eventId){
+  if(!state.eventSeen) state.eventSeen = freshEventSeen();
+  state.eventSeen[eventId] = true;
 }
 
 function setBackground(key){
@@ -1608,7 +2161,14 @@ function normalizeState(obj){
   if(!Array.isArray(obj.backlog)) obj.backlog = [];
   if(!obj.gallery || typeof obj.gallery !== "object") obj.gallery = {};
   if(!Array.isArray(obj.gallery.unlockedCg)) obj.gallery.unlockedCg = [];
+  if(typeof obj.currentLocation !== "string") obj.currentLocation = "room";
 
+  if(!obj.eventSeen || typeof obj.eventSeen !== "object") obj.eventSeen = freshEventSeen();
+  if(!obj.heroineSeen || typeof obj.heroineSeen !== "object") obj.heroineSeen = freshHeroineSeen();
+
+  if(!obj.deathScene || typeof obj.deathScene !== "object"){
+    obj.deathScene = { active:false, bgKey:"" };
+  }
   if(!obj.affection || typeof obj.affection !== "object") obj.affection = freshAffection();
   var base = freshAffection();
   for(var k in base){
@@ -1621,36 +2181,11 @@ function normalizeState(obj){
   return obj;
 }
 function save(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    toast("저장 완료!");
-  }catch(e){
-    toast("저장 실패");
-  }
+  openSaveLoadModal("save");
 }
+
 function load(){
-  var raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw){
-    toast("저장 데이터가 없어요.");
-    return;
-  }
-  try{
-    var obj = JSON.parse(raw);
-    obj = normalizeState(obj);
-    if(!obj) throw new Error("bad");
-    state = obj;
-
-    updateHud();
-    updateBgmUI();
-    updateAutoUI();
-    refreshRoom();
-
-    if(state.script) renderCurrentLine();
-    else enterRoom("불러오기를 완료했습니다.");
-    toast("불러오기 완료!");
-  }catch(e){
-    toast("저장 데이터가 손상됐어요.");
-  }
+  openSaveLoadModal("load");
 }
 function resetGame(){
   state = {
@@ -1660,11 +2195,18 @@ function resetGame(){
     energy: 100,
     maxEnergy: 100,
     scene: "room",
+    currentLocation: "room",
     backlog: [],
     gallery: { unlockedCg: [] },
     affection: freshAffection(),
     script: null,
-    slots: {L:null,C:null,R:null}
+    slots: {L:null,C:null,R:null},
+    eventSeen: freshEventSeen(),
+    heroineSeen: freshHeroineSeen(),
+    deathScene: {
+      active: false,
+      bgKey: ""
+    }
   };
   updateHud();
   refreshRoom();
@@ -1855,6 +2397,37 @@ async function playCutsceneFromCsv(cutsceneName, afterFn){
 /* ============================================================================
   13) Game Logic
 ============================================================================ */
+
+var $deathScreen = document.getElementById("deathScreen");
+var $deathBg = document.getElementById("deathBg");
+var $btnDeathToTitle = document.getElementById("btnDeathToTitle");
+
+function openDeathScene(bgKey){
+  state.deathScene.active = true;
+  state.deathScene.bgKey = bgKey || "death_lonely";
+
+  var src = (assets.bg && assets.bg[state.deathScene.bgKey]) ? assets.bg[state.deathScene.bgKey] : "";
+  $deathBg.src = src;
+  $deathScreen.classList.add("open");
+
+  setRoomUiVisible(false);
+  applySlots({L:null,C:null,R:null});
+  stopBgm();
+}
+
+function closeDeathScene(){
+  state.deathScene.active = false;
+  state.deathScene.bgKey = "";
+  $deathScreen.classList.remove("open");
+}
+
+function goToTitleFromDeath(){
+  closeDeathScene();
+  resetGame();
+  refreshRoom();
+  showTitle();
+}
+
 function rand(arr){
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -1878,17 +2451,9 @@ function getDateCandidates(){
   return out;
 }
 
-function timePoolKey(){
-  if(state.timeIndex === 0) return "dawn";
-  if(state.timeIndex === 1) return "morning";
-  if(state.timeIndex === 2) return "noon";
-  if(state.timeIndex === 3) return "evening";
-  return "midnight";
-}
-
 async function startPrologue(){
   try{
-    await playCutsceneFromCsv("prologue_1", function(){
+    await playCutsceneFromCsv("prologue", function(){
       openPrologueBranchChoice();
     });
   }catch(err){
@@ -1932,7 +2497,7 @@ function openPrologueBranchChoice(){
           goToPrologueCommon();
         }).catch(function(err){
           console.error(err);
-          toast("prologue_b 컷씬을 불러오지 못했습니다.");
+          toast("prologue_c 컷씬을 불러오지 못했습니다.");
         });
       }
     }
@@ -1953,16 +2518,12 @@ function goToPrologueCommon(){
 
 function PrologueDeathScene(){
   playCutsceneFromCsv("prologue_death", function(){
-    resetGame();
-    refreshRoom();
-    showTitle();
+    openDeathScene("death_lonely");
     toast("프롤로그에서 사망했습니다.");
   }).catch(function(err){
     console.error(err);
     toast("prologue_death 컷씬을 불러오지 못했습니다.");
-    resetGame();
-    refreshRoom();
-    showTitle();
+    openDeathScene("death_lonely");
   });
 }
 
@@ -2081,12 +2642,46 @@ function openActionMenu(){
 
 function openLocationMenu(mode){
   showChoices([
-    { text: "숲길", onClick: function(){ startFieldAction(mode, "forest"); } },
-    { text: "호수", onClick: function(){ startFieldAction(mode, "lake"); } },
-    { text: "들판", onClick: function(){ startFieldAction(mode, "field"); } },
-    { text: "산", onClick: function(){ startFieldAction(mode, "mountain"); } },
+    { text: "숲길", onClick: function(){ openCharacterSelect(mode, "forest"); } },
+    { text: "호수", onClick: function(){ openCharacterSelect(mode, "lake"); } },
+    { text: "들판", onClick: function(){ openCharacterSelect(mode, "field"); } },
+    { text: "산", onClick: function(){ openCharacterSelect(mode, "mountain"); } },
+    { text: "마을", onClick: function(){ openCharacterSelect(mode, "village"); } },
+    { text: "신단", onClick: function(){ openCharacterSelect(mode, "shrine"); } },
     { text: "돌아가기", onClick: function(){ openActionMenu(); } }
   ]);
+}
+
+function openCharacterSelect(mode, location){
+  var heroines = getAvailableHeroines(location);
+
+  if(!heroines.length){
+    enterRoom(getTimeLabel() + "에 " + getLocationLabel(location) + "에는 만날 수 있는 사람이 없다.");
+    return;
+  }
+
+  var choices = [];
+  for(var i=0;i<heroines.length;i++){
+    (function(heroine){
+      choices.push({
+        text: names[heroine] + "와(과) 대화하기",
+        onClick: function(){
+          if(mode === "walk") startTalkAction("walk", location, heroine);
+          else if(mode === "explore") startTalkAction("explore", location, heroine);
+          else if(mode === "town") startTalkAction("town", location, heroine);
+        }
+      });
+    })(heroines[i]);
+  }
+
+  choices.push({
+    text: "돌아가기",
+    onClick: function(){
+      openLocationMenu(mode);
+    }
+  });
+
+  showChoices(choices);
 }
 
 function openDateMenu(){
@@ -2110,24 +2705,6 @@ function locationToScene(location){
   if(location === "field") return "forestday";
   if(location === "mountain") return "forestsunset";
   return "forestday";
-}
-
-function pickWalkHeroine(location){
-  var poolMap = WALK_TIME_POOL[timePoolKey()] || WALK_TIME_POOL.morning;
-  var pool = poolMap[location] || DWELLING[location] || heroineKeys;
-  return rand(pool);
-}
-
-function startFieldAction(mode, location){
-  var cost = mode === "walk" ? ACTION_COST.walk : ACTION_COST.explore;
-  if(!spendEnergy(cost)) return;
-
-  if(mode === "walk"){
-    var heroine = pickWalkHeroine(location);
-    startWalkEvent(heroine, location);
-    return;
-  }
-  startExploreEvent(location);
 }
 
 function heroineFlavor(key){
@@ -2159,97 +2736,8 @@ function randomSmallTalk(){
   return rand(talks);
 }
 
-function startWalkEvent(heroine, location){
-  var place = LOCATION_LABELS[location];
-  var scene = locationToScene(location);
-  var affGain = (state.timeIndex === 3 || state.timeIndex === 4) ? 4 : 3;
-
-  startScript([
-    {
-      who: "system",
-      scene: scene,
-      text: getTimeLabel() + "의 " + place + ".\n산책을 하던 환웅은 " + names[heroine] + "와(과) 마주쳤다."
-    },
-    {
-      who: heroine,
-      scene: scene,
-      text: heroineFlavor(heroine)
-    },
-    {
-      who: "hwanung",
-      scene: scene,
-      text: randomSmallTalk()
-    }
-  ], function(){
-    gainAffection(heroine, affGain);
-    pushBacklog("SYSTEM", names[heroine] + " 호감도 +" + affGain);
-    advanceAfterAction();
-  });
-}
-
-function startExploreEvent(location){
-  var place = LOCATION_LABELS[location];
-  var scene = locationToScene(location);
-  var rewards = {
-    forest: ["약초", "버섯", "산열매"],
-    lake: ["물고기", "조개", "반짝이는 돌"],
-    field: ["곡식", "들꽃", "말린 풀잎"],
-    mountain: ["광석 조각", "희귀 약초", "고목 열매"]
-  };
-  var found = rand(rewards[location] || ["잡동사니"]);
-  var maybeHeroine = Math.random() < 0.35 ? rand(DWELLING[location] || heroineKeys) : null;
-
-  var lines = [
-    {
-      who: "system",
-      scene: scene,
-      text: getTimeLabel() + "의 " + place + "을(를) 탐색했다.\n" + found + "을(를) 손에 넣었다."
-    }
-  ];
-
-  if(maybeHeroine){
-    lines.push({
-      who: maybeHeroine,
-      scene: scene,
-      text: names[maybeHeroine] + "이(가) 탐색 도중 잠깐 모습을 드러냈다.\n짧게 도움을 주고 다시 자리를 떴다."
-    });
-  }
-
-  startScript(lines, function(){
-    if(maybeHeroine){
-      gainAffection(maybeHeroine, 2);
-      pushBacklog("SYSTEM", names[maybeHeroine] + " 호감도 +2");
-    }
-    advanceAfterAction();
-  });
-}
-
 function doTownVisit(){
-  if(!spendEnergy(ACTION_COST.town)) return;
-
-  var townPeople = ["pig","dog","chicken"];
-  var heroine = rand(townPeople);
-  startScript([
-    {
-      who: "system",
-      scene: "forestday",
-      text: "마을을 방문했다.\n장터 주변은 제법 활기차다."
-    },
-    {
-      who: heroine,
-      scene: "forestday",
-      text: names[heroine] + "이(가) 우연히 환웅을 발견하고 말을 걸어온다."
-    },
-    {
-      who: "hwanung",
-      scene: "forestday",
-      text: "잠깐의 마을 방문이었지만, 의외로 수확이 있었다."
-    }
-  ], function(){
-    gainAffection(heroine, 2);
-    pushBacklog("SYSTEM", names[heroine] + " 호감도 +2");
-    advanceAfterAction();
-  });
+  openCharacterSelect("town", "village");
 }
 
 function startDateEvent(heroine){
@@ -2275,6 +2763,85 @@ function startDateEvent(heroine){
   ], function(){
     gainAffection(heroine, 8);
     pushBacklog("SYSTEM", names[heroine] + " 호감도 +8");
+    advanceAfterAction();
+  });
+}
+
+function getActionCost(action){
+  if(action === "walk") return ACTION_COST.walk;
+  if(action === "explore") return ACTION_COST.explore;
+  if(action === "town") return ACTION_COST.town;
+  if(action === "date") return ACTION_COST.date;
+  return 0;
+}
+
+function getTalkSceneByLocation(location){
+  if(location === "mountain") return "forestsunset";
+  if(location === "shrine") return "palace";
+  return "forestday";
+}
+
+function startTalkAction(action, location, heroine){
+  var cost = getActionCost(action);
+  if(!spendEnergy(cost)) return;
+
+  var scene = getTalkSceneByLocation(location);
+  var place = getLocationLabel(location);
+  state.currentLocation = location;
+  markHeroineSeen(heroine);
+
+  var ev = getTriggeredEvent(action, location, heroine);
+  if(ev){
+    setEventSeen(ev.id);
+    playCutsceneFromCsv(ev.cutscene, function(){
+      gainAffection(heroine, action === "explore" ? 2 : 3);
+      pushBacklog("SYSTEM", names[heroine] + " 호감도 +" + (action === "explore" ? 2 : 3));
+      advanceAfterAction();
+    }).catch(function(err){
+      console.error(err);
+      toast(ev.cutscene + " 컷씬을 불러오지 못했습니다.");
+      startNormalTalk(action, location, heroine, scene, place);
+    });
+    return;
+  }
+
+  startNormalTalk(action, location, heroine, scene, place);
+}
+
+function startNormalTalk(action, location, heroine, scene, place){
+  var gain = 0;
+  var intro = "";
+
+  if(action === "walk"){
+    gain = (state.timeIndex === 3 || state.timeIndex === 4) ? 4 : 3;
+    intro = getTimeLabel() + "의 " + place + ".\n산책을 하던 환웅은 " + names[heroine] + "와(과) 마주쳤다.";
+  }else if(action === "explore"){
+    gain = 2;
+    intro = getTimeLabel() + "의 " + place + ".\n탐색 도중 " + names[heroine] + "와(과) 조우했다.";
+  }else if(action === "town"){
+    gain = 2;
+    intro = getTimeLabel() + "의 " + place + ".\n마을에서 " + names[heroine] + "를 발견했다.";
+  }
+
+  startScript([
+    {
+      who: "system",
+      scene: scene,
+      text: intro
+    },
+    {
+      who: heroine,
+      scene: scene,
+      text: heroineFlavor(heroine)
+    },
+    {
+      who: "hwanung",
+      scene: scene,
+      text: randomSmallTalk()
+    }
+  ], function(){
+    gainAffection(heroine, gain);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +" + gain);
     advanceAfterAction();
   });
 }
@@ -2322,6 +2889,81 @@ function startEndingSummary(){
       }
     ]);
   });
+}
+
+var currentCodexKey = heroineKeys[0];
+
+function spawnTextForHeroine(key){
+  var info = HEROINE_DATABASE[key];
+  if(!info || !info.spawn) return "출몰 정보 없음";
+
+  var order = ["dawn","morning","noon","evening","midnight"];
+  var labelMap = {
+    dawn: "새벽",
+    morning: "아침",
+    noon: "점심",
+    evening: "저녁",
+    midnight: "심야"
+  };
+
+  var lines = [];
+  for(var i=0;i<order.length;i++){
+    var t = order[i];
+    var arr = info.spawn[t] || [];
+    if(!arr.length) continue;
+    var text = arr.map(function(loc){ return getLocationLabel(loc); }).join(", ");
+    lines.push("[" + labelMap[t] + "] " + text);
+  }
+  return lines.join(", ");
+}
+
+function renderCodexList(){
+  $codexList.innerHTML = "";
+
+  for(var i=0; i<heroineKeys.length; i++){
+    (function(key){
+      var item = document.createElement("div");
+      item.className = "codexItem" + (currentCodexKey === key ? " active" : "");
+
+      item.innerHTML =
+        '<img class="codexThumb" src="' + getHeroinePortrait(key) + '" alt="' + names[key] + '">' +
+        '<div>' +
+          '<div class="codexName">' + names[key] + '</div>' +
+          '<div class="kbd">호감도 ' + (state.affection[key] || 0) + '</div>' +
+        '</div>';
+
+      item.addEventListener("click", function(){
+        currentCodexKey = key;
+        renderCodex();
+      });
+
+      $codexList.appendChild(item);
+    })(heroineKeys[i]);
+  }
+}
+
+function renderCodexInfo(){
+  var key = currentCodexKey;
+
+  $codexInfo.innerHTML =
+    '<img class="codexPortrait" src="' + getHeroinePortrait(key) + '" alt="' + names[key] + '">' +
+    '<div class="titleName" style="font-size:22px;">' + names[key] + '</div>' +
+    '<div class="codexDesc">현재 호감도 ' + (state.affection[key] || 0) + ',<br>' +
+    '주요 출몰 위치:<br>' + spawnTextForHeroine(key) + '.</div>';
+}
+
+function renderCodex(){
+  renderCodexList();
+  renderCodexInfo();
+}
+
+function openCodex(){
+  renderCodex();
+  $codexModal.classList.add("open");
+}
+
+function closeCodex(){
+  $codexModal.classList.remove("open");
 }
 
 /* ============================================================================
@@ -2403,22 +3045,65 @@ $stage.addEventListener("click", function(e){
 
 /* Keyboard */
 window.addEventListener("keydown", function(e){
+
+  // Esc 우선 처리
   if(e.code === "Escape"){
+    if($saveLoadModal.classList.contains("open")){ closeSaveLoadModal(); return; }
+    if($codexModal.classList.contains("open")){ closeCodex(); return; }
     if($cgViewerModal.classList.contains("open")){ closeCgViewer(); return; }
     if($galleryModal.classList.contains("open")){ closeGallery(); return; }
     if($modal.classList.contains("open")){ closeBacklog(); return; }
     if($titleScreen.classList.contains("open")){ hideTitle(); return; }
   }
 
-  if(e.code === "KeyB"){ $modal.classList.contains("open") ? closeBacklog() : openBacklog(); return; }
-  if(e.code === "KeyA"){ setAuto(!autoEnabled); return; }
-  if(e.code === "KeyM"){ toggleBgm(); return; }
+  // 저장/도감/데스씬/기타 모달 열려 있으면 일반 게임 키 막기
+  if($saveLoadModal.classList.contains("open")) return;
+  if($codexModal.classList.contains("open")) return;
+  if($deathScreen.classList.contains("open")) return;
 
+  // CG 뷰어 전용 키
   if($cgViewerModal.classList.contains("open")){
     if(e.code === "ArrowLeft"){ moveCg(-1); return; }
     if(e.code === "ArrowRight"){ moveCg(1); return; }
+    return;
   }
 
+  // 갤러리 / 백로그 / 타이틀 열려 있으면 진행 키 막기
+  if($galleryModal.classList.contains("open")) return;
+  if($modal.classList.contains("open")) return;
+  if($titleScreen.classList.contains("open")) return;
+
+  // 도감
+  if(e.code === "KeyL"){
+    openCodex();
+    return;
+  }
+
+  // 저장 / 불러오기
+  if(e.code === "KeyS"){
+    save();
+    return;
+  }
+  if(e.code === "KeyO"){
+    load();
+    return;
+  }
+
+  // 기존 단축키 복원
+  if(e.code === "KeyB"){
+    openBacklog();
+    return;
+  }
+  if(e.code === "KeyA"){
+    setAuto(!autoEnabled);
+    return;
+  }
+  if(e.code === "KeyM"){
+    toggleBgm();
+    return;
+  }
+
+  // 숫자키 선택지
   var num = -1;
   if(/^Digit[1-9]$/.test(e.code)){
     num = parseInt(e.code.replace("Digit",""), 10) - 1;
@@ -2428,11 +3113,27 @@ window.addEventListener("keydown", function(e){
     return;
   }
 
-  if(e.code === "Space"){
+  // 대사 진행
+  if(e.code === "Space" || e.code === "Enter"){
     e.preventDefault();
     next();
     return;
   }
+});
+
+$btnSaveLoadClose.addEventListener("click", function(){ closeSaveLoadModal(); });
+$saveLoadModal.addEventListener("click", function(e){
+  if(e.target === $saveLoadModal) closeSaveLoadModal();
+});
+
+$btnCodexClose.addEventListener("click", function(){ closeCodex(); });
+$codexModal.addEventListener("click", function(e){
+  if(e.target === $codexModal) closeCodex();
+});
+
+$btnDeathToTitle.addEventListener("click", function(){
+  playSfx("click");
+  goToTitleFromDeath();
 });
 
 /* ============================================================================
