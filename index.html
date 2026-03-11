@@ -2323,6 +2323,80 @@ async function loadCutsceneCsv(url){
   return cutsceneTable;
 }
 
+function ensureArrayValue(str){
+  if(!str) return null;
+
+  var raw = String(str).trim();
+  if(!raw) return null;
+
+  var parts = raw.split("|").map(function(v){
+    return String(v || "").trim();
+  }).filter(Boolean);
+
+  return parts.length ? parts : null;
+}
+
+function buildSlotsFromSheetRow(row){
+  var L = row.charL ? { key: row.charL } : null;
+  var C = row.charC ? { key: row.charC } : null;
+  var R = row.charR ? { key: row.charR } : null;
+
+  if(!L && !C && !R) return null;
+  return { L:L, C:C, R:R };
+}
+
+function buildCutsceneLines(cutsceneName){
+  var rows = cutsceneTable
+    .filter(function(row){
+      return String(row.cutscene || "").trim() === String(cutsceneName).trim();
+    })
+    .sort(function(a, b){
+      return Number(a.line || 0) - Number(b.line || 0);
+    });
+
+  return rows.map(function(row){
+    var line = {
+      who: row.who || "system",
+      scene: row.scene || "room",
+      text: row.text || ""
+    };
+
+    var slots = buildSlotsFromSheetRow(row);
+    if(slots) line.slots = slots;
+
+    var effects = ensureArrayValue(row.effects);
+    if(effects) line.effects = effects;
+
+    if(row.unlockCg) line.unlockCg = row.unlockCg;
+    if(row.sfx) line.sfx = row.sfx;
+    if(row.bgm) line.bgm = row.bgm;
+
+    return line;
+  });
+}
+
+function hasCutsceneRows(cutsceneName){
+  for(var i=0; i<cutsceneTable.length; i++){
+    if(String(cutsceneTable[i].cutscene || "").trim() === String(cutsceneName).trim()){
+      return true;
+    }
+  }
+  return false;
+}
+
+async function playCutsceneFromCsv(cutsceneName, afterFn){
+  if(!cutsceneTableLoaded){
+    await loadCutsceneCsv();
+  }
+
+  if(!hasCutsceneRows(cutsceneName)){
+    throw new Error("시트에 '" + cutsceneName + "' 컷씬이 없습니다.");
+  }
+
+  var lines = buildCutsceneLines(cutsceneName);
+  startScript(lines, afterFn);
+}
+
 /* ============================================================================
   13) Game Logic
 ============================================================================ */
@@ -2387,7 +2461,7 @@ async function startPrologue(){
     });
   }catch(err){
     console.error(err);
-    toast("프롤로그 CSV를 불러오지 못했습니다.");
+    toast("프롤로그 스크립트를 불러오지 못했습니다.");
     state.day = 1;
     state.timeIndex = 1;
     state.energy = 100;
