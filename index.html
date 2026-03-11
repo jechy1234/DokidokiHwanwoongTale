@@ -51,7 +51,7 @@
 	  display:grid;
 	  grid-template-columns: 1fr 1fr 1fr;
 	  align-items:end;
-	  padding: 0 3vw 0 3vw; /* 아래 패딩 제거해서 캐릭터를 바닥까지 내림 */
+	  padding: 0 2vw 0 2vw; /* 아래 패딩 제거해서 하반신이 대화창 뒤로 들어가게 */
 	  pointer-events:none;
 	  z-index:10;
 	}
@@ -66,10 +66,11 @@
 	}
 
 	.char{
-	  max-height: 96vh;   /* 기존 88vh → 96vh */
+	  max-height: 112vh;   /* 핵심: 세로 크기 확실히 키움 */
 	  width:auto;
-	  max-width: 125%;    /* 기존 110% → 125% */
+	  max-width: 145%;     /* 가로도 조금 더 크게 */
 	  object-fit:contain;
+	  object-position: center bottom;
 	  filter: drop-shadow(0 25px 40px rgba(0,0,0,.55));
 	  opacity: 0;
 	  transform: translateY(12px) scale(0.98);
@@ -551,13 +552,22 @@
 
     /* 모바일 */
     @media (max-width: 720px){
-      :root{ --boxH: 240px; }
-      .textArea{ font-size: 16px; }
-      .chars{ padding: 0 2vw calc(var(--boxH) - 30px) 2vw; }
-      .cgThumb{ min-height: 190px; }
-      .cgThumb img{ height: 130px; }
-      .viewerMetaLeft #viewerTitle, .viewerMetaLeft #viewerDesc{ max-width: 44vw; }
-    }
+	  :root{ --boxH: 240px; }
+	  .textArea{ font-size: 16px; }
+
+	  .chars{
+		padding: 0 1vw 0 1vw;
+	  }
+
+	  .char{
+		max-height: 102vh;
+		max-width: 155%;
+	  }
+
+	  .cgThumb{ min-height: 190px; }
+	  .cgThumb img{ height: 130px; }
+	  .viewerMetaLeft #viewerTitle, .viewerMetaLeft #viewerDesc{ max-width: 44vw; }
+	}
     /* ===== Death Scene ===== */
     .deathScreen{
       position:absolute; inset:0;
