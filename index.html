@@ -812,49 +812,45 @@
         </div>
       </div>
     </div>
+	<!-- CG Viewer Modal -->
+	<div class="modal" id="cgViewerModal">
+	  <div class="viewerBox">
+		<div class="modalHead">
+		  <div class="modalHeadLeft">
+			<div><b>CG</b> <span class="kbd">Esc=닫기 · ←/→=넘기기</span></div>
+		  </div>
+		  <div class="modalHeadRight">
+			<div class="btn" id="btnViewerClose">Close</div>
+		  </div>
+		</div>
 
-    <!-- CG Viewer Modal -->
-    <div class="modal" id="cgViewerModal">
-      <div class="viewerBox">
-        <div class="modalHead">
-          <div class="modalHeadLeft">
-            <div><b>CG</b> <span class="kbd">Esc=닫기 · ←/→=넘기기</span></div>
-          </div>
-          <div class="modalHeadRight">
-            <div class="btn" id="btnViewerClose">Close</div>
-          </div>
-        </div>
+		<div class="viewerBody">
+		  <div class="viewerImgWrap" id="viewerImgWrap">
+			<img id="viewerImg" alt="cg viewer" />
+			<div class="viewerLock" id="viewerLock" style="display:none;">아직 해금되지 않았습니다.</div>
+		  </div>
+		</div>
 
-        <div class="viewerBody">
-          <div class="viewerImgWrap" id="viewerImgWrap">
-            <img id="viewerImg" alt="cg viewer" />
-            <div class="viewerLock" id="viewerLock" style="display:none;">아직 해금되지 않았습니다.</div>
-          </div>
-        </div>
-    </div>
-	<div class="viewerFoot">
-	  <div class="viewerMetaLeft">
-		<div id="viewerTitle"></div>
-		<div id="viewerDesc"></div>
+		<div class="viewerFoot">
+		  <div class="viewerMetaLeft">
+			<div id="viewerTitle"></div>
+			<div id="viewerDesc"></div>
+		  </div>
+
+		  <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
+
+		  <div class="viewerNavRight">
+			<span class="tri" id="btnCgPrev">◀</span>
+			<span class="kbd">←/→</span>
+			<span class="tri" id="btnCgNext">▶</span>
+		  </div>
+		</div>
 	  </div>
-
-	  <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
-
-	  <div class="viewerNavRight">
-		<span class="tri" id="btnCgPrev">◀</span>
-		<span class="kbd">←/→</span>
-		<span class="tri" id="btnCgNext">▶</span>
-	  </div>
 	</div>
-
-	</div>
-	</div>
-
 
 	<!-- Save / Load Modal -->
 	<div class="modal" id="saveLoadModal">
 	  <div class="modalBox">
-
 		<div class="modalHead">
 		  <div class="modalHeadLeft">
 			<div><b id="saveLoadTitle">저장</b> <span class="kbd">Esc=닫기</span></div>
@@ -871,15 +867,12 @@
 		<div class="modalFoot">
 		  <div class="kbd">슬롯을 클릭하면 저장 또는 불러오기가 실행됩니다.</div>
 		</div>
-
 	  </div>
 	</div>
-
 
 	<!-- Heroine Codex Modal -->
 	<div class="modal" id="codexModal">
 	  <div class="modalBox" style="width:min(1080px,98vw);height:min(86vh,860px);">
-
 		<div class="modalHead">
 		  <div class="modalHeadLeft">
 			<div><b>히로인 도감</b> <span class="kbd">L / Esc=닫기</span></div>
@@ -895,10 +888,8 @@
 			<div class="codexInfo" id="codexInfo"></div>
 		  </div>
 		</div>
-
 	  </div>
 	</div>
-
 
 	<!-- Death Scene -->
 	<div class="deathScreen" id="deathScreen">
@@ -1260,7 +1251,7 @@ var AFFECTION_EVENTS = [
     minAffection: 50,
     cutscene: "dragon_50"
   }
-};
+];
 
 /* ============================================================================
   2) DOM refs
@@ -1417,18 +1408,58 @@ function closeSaveLoadModal(){
 function saveToSlot(index){
   try{
     var slots = getSlotStorage();
-    var snapshot = deepCopyState(state);
-    snapshot.script = null;
+    var snapshot = normalizeState(deepCopyState(state));
+
     slots[index] = {
       meta: getSaveMeta(snapshot),
       data: snapshot
     };
+
     setSlotStorage(slots);
     renderSaveLoadSlots();
     toast((index + 1) + "번 슬롯에 저장 완료!");
   }catch(e){
     console.error(e);
     toast("저장 실패");
+  }
+}
+
+function restoreLoadedState(){
+  closeDeathScene();
+  closeChoices();
+  setAuto(false);
+
+  updateHud();
+  updateBgmUI();
+  updateAutoUI();
+
+  if(state.deathScene && state.deathScene.active){
+    openDeathScene(state.deathScene.bgKey || "death_lonely");
+    return;
+  }
+
+  if(state.script){
+    setRoomUiVisible(false);
+    renderCurrentLine();
+    return;
+  }
+
+  if(state.scene){
+    setBackground(state.scene);
+  }else{
+    setBackground("room");
+  }
+
+  applySlots(state.slots || {L:null, C:null, R:null});
+
+  if(state.currentLocation === "room"){
+    setRoomUiVisible(true);
+    $speaker.textContent = "SYSTEM";
+    if(!$text.textContent){
+      $text.textContent = "환웅의 거처.\n동굴 입구를 클릭해 행동하고, 침대를 클릭해 수면할 수 있다.";
+    }
+  }else{
+    setRoomUiVisible(false);
   }
 }
 
@@ -1443,13 +1474,7 @@ function loadFromSlot(index){
     var obj = normalizeState(deepCopyState(slots[index].data));
     state = obj;
 
-    updateHud();
-    updateBgmUI();
-    updateAutoUI();
-    refreshRoom();
-
-    if(state.script) renderCurrentLine();
-    else enterRoom("불러오기를 완료했습니다.");
+    restoreLoadedState();
 
     closeSaveLoadModal();
     toast((index + 1) + "번 슬롯 불러오기 완료!");
@@ -2156,7 +2181,7 @@ function normalizeState(obj){
   if(typeof obj.maxDay !== "number") obj.maxDay = 21;
   if(typeof obj.timeIndex !== "number") obj.timeIndex = 1;
   if(typeof obj.energy !== "number") obj.energy = 100;
-  if(typeof obj.maxEnergy !== "number") obj.maxEnergy = 100;
+  if(typeof obj.maxEnergy !== "number") obj.maxEnergy = 200;
   if(!obj.scene) obj.scene = "room";
   if(!Array.isArray(obj.backlog)) obj.backlog = [];
   if(!obj.gallery || typeof obj.gallery !== "object") obj.gallery = {};
@@ -2193,7 +2218,7 @@ function resetGame(){
     maxDay: 21,
     timeIndex: 1,
     energy: 100,
-    maxEnergy: 100,
+    maxEnergy: 200,
     scene: "room",
     currentLocation: "room",
     backlog: [],
@@ -2529,6 +2554,7 @@ function PrologueDeathScene(){
 
 function enterRoom(message){
   state.script = null;
+  state.currentLocation = "room";
   setBackground("room");
   applySlots({L:null,C:null,R:null});
   setRoomUiVisible(true);
@@ -2543,6 +2569,7 @@ function enterRoom(message){
 }
 
 function refreshRoom(){
+  state.currentLocation = "room";
   setBackground("room");
   setRoomUiVisible(true);
   updateHud();
@@ -2677,7 +2704,8 @@ function openCharacterSelect(mode, location){
   choices.push({
     text: "돌아가기",
     onClick: function(){
-      openLocationMenu(mode);
+      if(mode === "town") openActionMenu();
+	  else openLocationMenu(mode);
     }
   });
 
@@ -2690,7 +2718,7 @@ function openDateMenu(){
   for(var i=0;i<list.length;i++){
     (function(key){
       choices.push({
-        text: names[key] + "에게 데이트를 신청한다 -25",
+        text: names[key] + "에게 데이트를 신청한다 -" + ACTION_COST.date,
         onClick: function(){ startDateEvent(key); }
       });
     })(list[i]);
@@ -3004,7 +3032,6 @@ $btnStart.addEventListener("click", async function(){
 });
 $btnContinue.addEventListener("click", function(){
   playSfx("click");
-  hideTitle();
   load();
 });
 $btnGalleryTitle.addEventListener("click", function(){
