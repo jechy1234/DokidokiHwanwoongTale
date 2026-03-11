@@ -44,7 +44,7 @@
       pointer-events:none;
     }
 
-	/* ===== 캐릭터 배치: 화면 비율 대응 최종본 ===== */
+	/* ===== 캐릭터 배치 최종 안정화 버전 ===== */
 	.chars{
 	  position:absolute;
 	  inset:0;
@@ -52,48 +52,41 @@
 	  z-index:10;
 	}
 
-	/* 슬롯은 대화창을 기준으로 서 있게 */
 	.slot{
 	  position:absolute;
-	  bottom:var(--boxH);
+	  bottom:var(--boxH);   /* 대화창 위 기준 */
 	  display:flex;
 	  justify-content:center;
 	  align-items:flex-end;
-	  width:34vw;
+	  width:32vw;
 	  height:calc(100vh - var(--boxH));
 	  overflow:visible;
 	}
 
-	/* 좌/중/우 위치 */
+	/* 좌우 위치 */
 	#slotL{
-	  left:5vw;
-	  transform:translateY(22%);
+	  left:3vw;
 	}
 
 	#slotC{
 	  left:50%;
-	  transform:translateX(-50%) translateY(22%);
+	  transform:translateX(-50%);
 	}
 
 	#slotR{
-	  right:5vw;
-	  transform:translateY(22%);
+	  right:3vw;
 	}
 
-	/* 캐릭터 크기: 전부 동일 규칙 */
+	/* 캐릭터 크기/위치 */
 	.char{
 	  width:auto;
-	  height:auto;
+	  height:calc(100vh - var(--boxH) + 140px);
+	  max-width:30vw;
 	  object-fit:contain;
 	  object-position:center bottom;
 
-	  /* 화면 비율 따라 자동 조절 */
-	  max-height:min(92vh, 58vw);
-	  max-width:28vw;
-
 	  filter: drop-shadow(0 28px 44px rgba(0,0,0,.58));
 	  opacity:0;
-	  transform:scale(1);
 	  transition: opacity .18s ease, filter .18s ease;
 	}
 
@@ -101,12 +94,12 @@
 	  opacity:1;
 	}
 
-	/* 중앙만 크게 하지 않음 */
+	/* 중앙만 따로 키우지 않음 */
 	#charL,
 	#charC,
 	#charR{
-	  max-height:min(92vh, 58vw);
-	  max-width:28vw;
+	  height:calc(100vh - var(--boxH) + 140px);
+	  max-width:30vw;
 	}
 
 	.char.dim{
@@ -119,61 +112,37 @@
 	  filter: drop-shadow(0 26px 46px rgba(0,0,0,.65)) saturate(1.05);
 	}
 
-	/* ===== 넓은 화면(데스크톱/QHD) 보정 ===== */
-	@media (min-width: 1400px){
-	  .slot{
-		width:32vw;
-	  }
-
-	  #slotL{
-		left:4vw;
-		transform:translateY(24%);
-	  }
-
-	  #slotC{
-		left:50%;
-		transform:translateX(-50%) translateY(24%);
-	  }
-
-	  #slotR{
-		right:4vw;
-		transform:translateY(24%);
-	  }
-
-	  #charL,
-	  #charC,
-	  #charR{
-		max-height:min(96vh, 54vw);
-		max-width:26vw;
-	  }
-	}
-
-	/* ===== 아주 넓은 화면(2560 이상) 보정 ===== */
-	@media (min-width: 2200px){
+	/* ===== 큰 화면 보정 ===== */
+	@media (min-width: 1800px){
 	  .slot{
 		width:30vw;
 	  }
 
-	  #slotL{
-		left:3vw;
-		transform:translateY(25%);
-	  }
-
-	  #slotC{
-		left:50%;
-		transform:translateX(-50%) translateY(25%);
-	  }
-
-	  #slotR{
-		right:3vw;
-		transform:translateY(25%);
-	  }
+	  #slotL{ left:2vw; }
+	  #slotR{ right:2vw; }
 
 	  #charL,
 	  #charC,
 	  #charR{
-		max-height:min(98vh, 50vw);
-		max-width:24vw;
+		height:calc(100vh - var(--boxH) + 180px);
+		max-width:27vw;
+	  }
+	}
+
+	/* ===== 작은 데스크톱 / 노트북 보정 ===== */
+	@media (max-width: 1366px){
+	  .slot{
+		width:34vw;
+	  }
+
+	  #slotL{ left:1vw; }
+	  #slotR{ right:1vw; }
+
+	  #charL,
+	  #charC,
+	  #charR{
+		height:calc(100vh - var(--boxH) + 90px);
+		max-width:32vw;
 	  }
 	}
 
@@ -188,26 +157,18 @@
 		height:calc(100vh - var(--boxH));
 	  }
 
-	  #slotL{
-		left:-6vw;
-		transform:translateY(18%);
-	  }
-
+	  #slotL{ left:-8vw; }
 	  #slotC{
 		left:50%;
-		transform:translateX(-50%) translateY(18%);
+		transform:translateX(-50%);
 	  }
-
-	  #slotR{
-		right:-6vw;
-		transform:translateY(18%);
-	  }
+	  #slotR{ right:-8vw; }
 
 	  #charL,
 	  #charC,
 	  #charR{
-		max-height:min(84vh, 82vw);
-		max-width:44vw;
+		height:calc(100vh - var(--boxH) + 40px);
+		max-width:46vw;
 	  }
 
 	  .cgThumb{ min-height:190px; }
