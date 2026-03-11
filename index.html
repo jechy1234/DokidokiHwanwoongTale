@@ -44,68 +44,69 @@
       pointer-events:none;
     }
 
-    /* 캐릭터 슬롯 */
-    .chars{
+	/* ===== 캐릭터 배치: 화면 비율 대응 최종본 ===== */
+	.chars{
 	  position:absolute;
 	  inset:0;
 	  pointer-events:none;
 	  z-index:10;
 	}
 
+	/* 슬롯은 대화창을 기준으로 서 있게 */
 	.slot{
 	  position:absolute;
 	  bottom:var(--boxH);
-	  transform:translateY(38%);
 	  display:flex;
 	  justify-content:center;
 	  align-items:flex-end;
+	  width:34vw;
+	  height:calc(100vh - var(--boxH));
+	  overflow:visible;
 	}
 
+	/* 좌/중/우 위치 */
 	#slotL{
-	  left:0;
-	  transform:translateX(-12%) translateY(38%);
+	  left:5vw;
+	  transform:translateY(22%);
 	}
 
 	#slotC{
 	  left:50%;
-	  transform:translateX(-50%) translateY(38%);
+	  transform:translateX(-50%) translateY(22%);
 	}
 
 	#slotR{
-	  right:0;
-	  transform:translateX(12%) translateY(38%);
+	  right:5vw;
+	  transform:translateY(22%);
 	}
 
+	/* 캐릭터 크기: 전부 동일 규칙 */
 	.char{
 	  width:auto;
 	  height:auto;
-
-	  max-height: min(78vh, 54vw);
-	  max-width: 34vw;
-
 	  object-fit:contain;
 	  object-position:center bottom;
 
+	  /* 화면 비율 따라 자동 조절 */
+	  max-height:min(92vh, 58vw);
+	  max-width:28vw;
+
 	  filter: drop-shadow(0 28px 44px rgba(0,0,0,.58));
 	  opacity:0;
-
-	  transform:translateY(0) scale(1);
-
-	  transition:
-		opacity .18s ease,
-		transform .18s ease,
-		filter .18s ease;
+	  transform:scale(1);
+	  transition: opacity .18s ease, filter .18s ease;
 	}
 
 	.char.show{
 	  opacity:1;
 	}
 
+	/* 중앙만 크게 하지 않음 */
 	#charL,
 	#charC,
 	#charR{
-	  max-height: min(78vh, 54vw);
-	  max-width: 34vw;
+	  max-height:min(92vh, 58vw);
+	  max-width:28vw;
 	}
 
 	.char.dim{
@@ -116,6 +117,106 @@
 	.char.focus{
 	  opacity:1;
 	  filter: drop-shadow(0 26px 46px rgba(0,0,0,.65)) saturate(1.05);
+	}
+
+	/* ===== 넓은 화면(데스크톱/QHD) 보정 ===== */
+	@media (min-width: 1400px){
+	  .slot{
+		width:32vw;
+	  }
+
+	  #slotL{
+		left:4vw;
+		transform:translateY(24%);
+	  }
+
+	  #slotC{
+		left:50%;
+		transform:translateX(-50%) translateY(24%);
+	  }
+
+	  #slotR{
+		right:4vw;
+		transform:translateY(24%);
+	  }
+
+	  #charL,
+	  #charC,
+	  #charR{
+		max-height:min(96vh, 54vw);
+		max-width:26vw;
+	  }
+	}
+
+	/* ===== 아주 넓은 화면(2560 이상) 보정 ===== */
+	@media (min-width: 2200px){
+	  .slot{
+		width:30vw;
+	  }
+
+	  #slotL{
+		left:3vw;
+		transform:translateY(25%);
+	  }
+
+	  #slotC{
+		left:50%;
+		transform:translateX(-50%) translateY(25%);
+	  }
+
+	  #slotR{
+		right:3vw;
+		transform:translateY(25%);
+	  }
+
+	  #charL,
+	  #charC,
+	  #charR{
+		max-height:min(98vh, 50vw);
+		max-width:24vw;
+	  }
+	}
+
+	/* ===== 모바일 ===== */
+	@media (max-width: 720px){
+	  :root{ --boxH: 240px; }
+	  .textArea{ font-size:16px; }
+
+	  .slot{
+		bottom:var(--boxH);
+		width:42vw;
+		height:calc(100vh - var(--boxH));
+	  }
+
+	  #slotL{
+		left:-6vw;
+		transform:translateY(18%);
+	  }
+
+	  #slotC{
+		left:50%;
+		transform:translateX(-50%) translateY(18%);
+	  }
+
+	  #slotR{
+		right:-6vw;
+		transform:translateY(18%);
+	  }
+
+	  #charL,
+	  #charC,
+	  #charR{
+		max-height:min(84vh, 82vw);
+		max-width:44vw;
+	  }
+
+	  .cgThumb{ min-height:190px; }
+	  .cgThumb img{ height:130px; }
+
+	  .viewerMetaLeft #viewerTitle,
+	  .viewerMetaLeft #viewerDesc{
+		max-width:44vw;
+	  }
 	}
 
     /* ====== 상단 HUD ====== */
@@ -585,48 +686,6 @@
     }
     .tri:hover{ background: rgba(18,26,44,.55); }
 
-	/* 모바일 */
-	@media (max-width: 720px){
-	  :root{ --boxH: 240px; }
-	  .textArea{ font-size: 16px; }
-
-	  .chars{
-		padding:0;
-	  }
-
-	  .slot{
-		bottom: var(--boxH);
-	  }
-
-	  #slotL{
-		left:0;
-		transform: translateX(-18%) translateY(34%);
-	  }
-
-	  #slotC{
-		left:50%;
-		transform: translateX(-50%) translateY(34%);
-	  }
-
-	  #slotR{
-		right:0;
-		transform: translateX(18%) translateY(34%);
-	  }
-
-	  .char,
-	  #charL,
-	  #charC,
-	  #charR{
-		max-height: min(74vh, 72vw);
-		max-width: 46vw;
-	  }
-
-	  .cgThumb{ min-height: 190px; }
-	  .cgThumb img{ height: 130px; }
-
-	  .viewerMetaLeft #viewerTitle,
-	  .viewerMetaLeft #viewerDesc{ max-width: 44vw; }
-	}
     /* ===== Death Scene ===== */
     .deathScreen{
       position:absolute; inset:0;
@@ -802,10 +861,10 @@
 
     <!-- Characters -->
     <div class="chars">
-      <div class="slot"><img class="char" id="charL" alt="left char" /></div>
-      <div class="slot"><img class="char" id="charC" alt="center char" /></div>
-      <div class="slot"><img class="char" id="charR" alt="right char" /></div>
-    </div>
+	  <div class="slot" id="slotL"><img class="char" id="charL" alt="left char" /></div>
+	  <div class="slot" id="slotC"><img class="char" id="charC" alt="center char" /></div>
+	  <div class="slot" id="slotR"><img class="char" id="charR" alt="right char" /></div>
+	</div>
 
     <!-- Choices Overlay -->
     <div class="choiceOverlay" id="choiceOverlay" aria-hidden="true">
