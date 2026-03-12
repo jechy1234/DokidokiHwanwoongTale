@@ -73,12 +73,12 @@
 
 	.slot{
 	  position:absolute;
-	  bottom:10px; /* 대화창 기준으로 고정 */
+	  top:80px;          /* 캐릭터 머리 기준 위치 */
 	  display:flex;
 	  justify-content:center;
-	  align-items:flex-end;
+	  align-items:flex-start;
 	  width:30%;
-	  height:78%;
+	  height:100%;
 	  overflow:visible;
 	}
 
@@ -97,10 +97,10 @@
 
 	.char{
 	  width:auto;
-	  height:1100px;       /* 캐릭터 크기 고정 */
+	  height:1000px;       /* 캐릭터 크기 고정 */
 	  max-width:none;
 	  object-fit:contain;
-	  object-position:center bottom;
+	  object-position:center top;
 
 	  filter: drop-shadow(0 28px 44px rgba(0,0,0,.58));
 	  opacity:0;
