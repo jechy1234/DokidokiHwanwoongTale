@@ -94,7 +94,21 @@
         linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55));
       pointer-events:none;
     }
+    .sceneCover{
+      position:absolute;
+      inset:0;
+      background:#000;
+      opacity:0;
+      pointer-events:none;
+      z-index:35;
+      transition:opacity .12s ease;
+    }
 
+    .sceneCover.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+	
     /* ===== 캐릭터 배치: 고정 좌표 ===== */
     .chars{
       position:absolute;
@@ -912,6 +926,7 @@
 		
 		<img class="bg" id="bgImg" alt="background" />
 		<div class="vignette"></div>
+		<div class="sceneCover" id="sceneCover"></div>
 
 		<!-- Title Screen -->
 		<div class="titleScreen open" id="titleScreen" aria-hidden="false">
@@ -1597,6 +1612,7 @@ var AFFECTION_EVENTS = [
 ============================================================================ */
 var $stage = document.getElementById("stage");
 var $bgImg = document.getElementById("bgImg");
+var $sceneCover = document.getElementById("sceneCover");
 
 var $gameShell = document.getElementById("gameShell");
 var $gameViewport = document.getElementById("gameViewport");
@@ -2328,6 +2344,16 @@ function setEventSeen(eventId){
   state.eventSeen[eventId] = true;
 }
 
+function showSceneCover(){
+  if(!$sceneCover) return;
+  $sceneCover.classList.add("show");
+}
+
+function hideSceneCover(){
+  if(!$sceneCover) return;
+  $sceneCover.classList.remove("show");
+}
+
 function setBackground(key){
   state.scene = key;
   var src = "";
@@ -2341,11 +2367,11 @@ function setBackground(key){
 
   if(key === "room"){
     var candidates = {
-      dawn: ["roomdawn", "cavenight", "caveday"],
-      morning: ["roommorning", "caveday", "forestday"],
-      noon: ["roomnoon", "caveday", "forestday"],
-      evening: ["roomevening", "caveday", "forestsunset", "cavenight"],
-      midnight: ["roommidnight", "cavenight", "caveday"]
+      dawn: ["roomdawn"],
+      morning: ["roommorning"],
+      noon: ["roomnoon"],
+      evening: ["roomevening"],
+      midnight: ["roommidnight"]
     }[timeKey()] || ["caveday"];
 
     for(var i=0;i<candidates.length;i++){
@@ -2893,16 +2919,33 @@ function hasCutsceneRows(cutsceneName){
 }
 
 async function playCutsceneFromCsv(cutsceneName, afterFn){
-  if(!cutsceneTableLoaded){
-    await loadCutsceneCsv();
-  }
+  showSceneCover();
 
-  if(!hasCutsceneRows(cutsceneName)){
-    throw new Error("시트에 '" + cutsceneName + "' 컷씬이 없습니다.");
-  }
+  try{
+    applySlots({ L:null, C:null, R:null });
+    setBackground("none");
 
-  var lines = buildCutsceneLines(cutsceneName);
-  startScript(lines, afterFn);
+    if(!cutsceneTableLoaded){
+      await loadCutsceneCsv();
+    }
+
+    if(!hasCutsceneRows(cutsceneName)){
+      throw new Error("시트에 '" + cutsceneName + "' 컷씬이 없습니다.");
+    }
+
+    var lines = buildCutsceneLines(cutsceneName);
+    startScript(lines, afterFn);
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        hideSceneCover();
+      });
+    });
+
+  }catch(err){
+    hideSceneCover();
+    throw err;
+  }
 }
 
 /* ============================================================================
