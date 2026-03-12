@@ -13,21 +13,40 @@
       --muted:rgba(242,246,255,.72);
       --accent:#ffc36a;
 
-      --boxH: 300px; /* 대화창 높이 */
+      --boxH: 280px; /* 대화창 높이 */
     }
     *{ box-sizing:border-box; }
     body{
-      margin:0; background:#000; color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
-      overflow:hidden;
-    }
+	  margin:0;
+	  background:#000;
+	  color:var(--text);
+	  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+	  overflow:hidden;
 
-    /* ====== 스테이지 ====== */
-    .stage{
-      position:relative;
-      width:100vw; height:100vh;
-      background:#05070c;
-    }
+	  display:flex;
+	  justify-content:center;
+	  align-items:center;
+	  width:100vw;
+	  height:100vh;
+	}
+
+	/* 16:9 고정 화면 */
+	.gameViewport{
+	  position:relative;
+	  width:min(100vw, calc(100vh * 16 / 9));
+	  height:min(100vh, calc(100vw * 9 / 16));
+	  background:#000;
+	  overflow:hidden;
+	}
+
+	/* ====== 스테이지 ====== */
+	.stage{
+	  position:relative;
+	  width:100%;
+	  height:100%;
+	  background:#05070c;
+	  overflow:hidden;
+	}
 
     .bg{
       position:absolute; inset:0;
@@ -44,7 +63,7 @@
       pointer-events:none;
     }
 
-	/* ===== 캐릭터 배치 최종 안정화 버전 ===== */
+	/* ===== 캐릭터 배치: 16:9 고정 버전 ===== */
 	.chars{
 	  position:absolute;
 	  inset:0;
@@ -54,18 +73,17 @@
 
 	.slot{
 	  position:absolute;
-	  bottom:-40px;
+	  bottom:180px; /* 대화창 기준으로 고정 */
 	  display:flex;
 	  justify-content:center;
 	  align-items:flex-end;
-	  width:32vw;
-	  height:100vh;
+	  width:30%;
+	  height:78%;
 	  overflow:visible;
 	}
 
-	/* 좌우 위치 */
 	#slotL{
-	  left:3vw;
+	  left:2%;
 	}
 
 	#slotC{
@@ -74,25 +92,19 @@
 	}
 
 	#slotR{
-	  right:3vw;
+	  right:2%;
 	}
 
-	/* 캐릭터 크기/위치 */
 	.char{
 	  width:auto;
-	  height:calc(100vh - var(--boxH) + 520px);
-	  max-width:42vw;
+	  height:980px;       /* 캐릭터 크기 고정 */
+	  max-width:none;
 	  object-fit:contain;
 	  object-position:center bottom;
 
-	  transform: translateY(300px); /* ↓ 캐릭터 내려주는 핵심 */
-	}
-
-	#charL,
-	#charC,
-	#charR{
-	  height:112vh;
-	  max-width:42vw;
+	  filter: drop-shadow(0 28px 44px rgba(0,0,0,.58));
+	  opacity:0;
+	  transition: opacity .18s ease, filter .18s ease;
 	}
 
 	.char.show{
@@ -108,79 +120,15 @@
 	  opacity:1;
 	  filter: drop-shadow(0 26px 46px rgba(0,0,0,.65)) saturate(1.05);
 	}
-
-	/* ===== 큰 화면 보정 ===== */
-	@media (min-width: 1800px){
-	  .slot{
-		width:30vw;
-		bottom:calc(var(--boxH) - 380px);
-		height:calc(100vh - var(--boxH) + 190px);
-	  }
-
-	  #slotL{ left:2vw; }
-	  #slotR{ right:2vw; }
-
-	  #charL,
-	  #charC,
-	  #charR{
-		height:calc(100vh - var(--boxH) + 600px);
-		max-width:40vw;
-	  }
-	}
-
-	/* ===== 작은 데스크톱 / 노트북 보정 ===== */
-	@media (max-width: 1366px){
-	  .slot{
-		width:34vw;
-		bottom:calc(var(--boxH) - 180px);
-		height:calc(100vh - var(--boxH) + 140px);
-	  }
-
-	  #slotL{ left:1vw; }
-	  #slotR{ right:1vw; }
-
-	  #charL,
-	  #charC,
-	  #charR{
-		height:calc(100vh - var(--boxH) + 430px);
-		max-width:44vw;
-	  }
-	}
-
-	/* ===== 모바일 ===== */
+	
 	@media (max-width: 720px){
-	  :root{ --boxH: 240px; }
-	  .textArea{ font-size:16px; }
-
-	  .slot{
-		bottom:var(--boxH);
-		width:42vw;
-		height:calc(100vh - var(--boxH));
-	  }
-
-	  #slotL{ left:-8vw; }
-	  #slotC{
-		left:50%;
-		transform:translateX(-50%);
-	  }
-	  #slotR{ right:-8vw; }
-
-	  #charL,
-	  #charC,
-	  #charR{
-		height:calc(100vh - var(--boxH) + 40px);
-		max-width:46vw;
-	  }
-
-	  .cgThumb{ min-height:190px; }
-	  .cgThumb img{ height:130px; }
-
+	  .textArea{ font-size: 16px; }
+	  .cgThumb{ min-height: 190px; }
+	  .cgThumb img{ height: 130px; }
 	  .viewerMetaLeft #viewerTitle,
-	  .viewerMetaLeft #viewerDesc{
-		max-width:44vw;
-	  }
+	  .viewerMetaLeft #viewerDesc{ max-width: 44vw; }
 	}
-
+	
     /* ====== 상단 HUD ====== */
     .hud{
       position:absolute; top:18px; left:18px; right:18px;
@@ -788,7 +736,9 @@
   </style>
 </head>
 <body>
+
   <div class="stage" id="stage">
+    
     <img class="bg" id="bgImg" alt="background" />
     <div class="vignette"></div>
 
@@ -809,11 +759,13 @@
       </div>
     </div>
 
+
     <!-- HUD -->
     <div class="hud">
       <div class="hudLeft">
         <div class="pill">DAY <b id="day">1</b> / 21</div>
       </div>
+
       <div class="hudRight">
         <div class="pill">BGM <b id="bgmState">OFF</b></div>
         <div class="btn" id="btnBgm">BGM (M)</div>
@@ -821,20 +773,32 @@
       </div>
     </div>
 
+
     <!-- Characters -->
     <div class="chars">
-	  <div class="slot" id="slotL"><img class="char" id="charL" alt="left char" /></div>
-	  <div class="slot" id="slotC"><img class="char" id="charC" alt="center char" /></div>
-	  <div class="slot" id="slotR"><img class="char" id="charR" alt="right char" /></div>
-	</div>
+      <div class="slot" id="slotL">
+        <img class="char" id="charL" alt="left char" />
+      </div>
 
-    <!-- Choices Overlay -->
+      <div class="slot" id="slotC">
+        <img class="char" id="charC" alt="center char" />
+      </div>
+
+      <div class="slot" id="slotR">
+        <img class="char" id="charR" alt="right char" />
+      </div>
+    </div>
+
+
+    <!-- Choices -->
     <div class="choiceOverlay" id="choiceOverlay" aria-hidden="true">
       <div class="choicePanel" id="choicePanel"></div>
     </div>
 
+
     <!-- Dialogue -->
     <div class="dialogueWrap">
+
       <div class="controlsRow" id="controlsRow">
         <div class="pill">AUTO <b id="autoState">OFF</b></div>
         <div class="btn" id="btnAuto">Auto (A)</div>
@@ -844,47 +808,66 @@
       </div>
 
       <div class="dialogue" id="dialogueBox">
+
         <div class="nameplate">
-          <div class="name"><span id="speaker">SYSTEM</span></div>
+          <div class="name">
+            <span id="speaker">SYSTEM</span>
+          </div>
           <div class="tag" id="sceneTag">Scene: -</div>
         </div>
+
         <div class="textArea" id="text"></div>
+
       </div>
 
       <div class="footerRow">
-        <div class="kbd">Space=다음 · 1~3=선택 · A=오토 · B=백로그 · M=BGM · ←/→=CG 넘기기</div>
+        <div class="kbd">
+          Space=다음 · 1~3=선택 · A=오토 · B=백로그 · M=BGM · ←/→=CG 넘기기
+        </div>
         <div class="btn" id="btnNext">Next (Space)</div>
       </div>
+
     </div>
+
 
     <!-- Backlog Modal -->
     <div class="modal" id="modal">
+
       <div class="modalBox">
+
         <div class="modalHead">
           <div class="modalHeadLeft">
             <div><b>백로그</b> <span class="kbd">Esc=닫기</span></div>
           </div>
+
           <div class="modalHeadRight">
             <div class="btn" id="btnClose">Close</div>
           </div>
         </div>
+
         <div class="modalBody" id="modalBody"></div>
+
         <div class="modalFoot">
           <div class="kbd">선택지도 기록됨</div>
           <div class="btn" id="btnClearLog">Clear</div>
         </div>
+
       </div>
+
     </div>
+
 
     <!-- Gallery Modal -->
     <div class="modal" id="galleryModal">
+
       <div class="modalBox galleryBox">
+
         <div class="modalHead">
           <div class="modalHeadLeft">
             <div><b>사진첩</b> <span class="kbd">Esc=닫기</span></div>
           </div>
+
           <div class="modalHeadRight">
-            <!-- ✅ Clear 대신: 전체해금 버튼을 상단(닫기 왼쪽)에 -->
             <div class="btn" id="btnUnlockAll">전체해금</div>
             <div class="btn" id="btnGalleryClose">Close</div>
           </div>
@@ -894,105 +877,143 @@
 
         <div class="modalFoot">
           <div class="galleryFoot">
-            <div class="kbd">assets.cg에 등록된 CG가 목록에 표시됩니다</div>
 
-            <!-- ✅ 페이지 표시 + 넘기기: 우측하단 -->
+            <div class="kbd">
+              assets.cg에 등록된 CG가 목록에 표시됩니다
+            </div>
+
             <div class="galleryRight">
               <div class="tinyBtn" id="btnPrevPage">◁ 페이지</div>
               <div class="kbd" id="pageInfo">1 / 1</div>
               <div class="tinyBtn" id="btnNextPage">페이지 ▷</div>
             </div>
+
           </div>
         </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- CG Viewer -->
+    <div class="modal" id="cgViewerModal">
+
+      <div class="viewerBox">
+
+        <div class="modalHead">
+          <div class="modalHeadLeft">
+            <div><b>CG</b> <span class="kbd">Esc=닫기 · ←/→=넘기기</span></div>
+          </div>
+
+          <div class="modalHeadRight">
+            <div class="btn" id="btnViewerClose">Close</div>
+          </div>
+        </div>
+
+        <div class="viewerBody">
+
+          <div class="viewerImgWrap" id="viewerImgWrap">
+            <img id="viewerImg" alt="cg viewer" />
+            <div class="viewerLock" id="viewerLock" style="display:none;">
+              아직 해금되지 않았습니다.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="viewerFoot">
+
+          <div class="viewerMetaLeft">
+            <div id="viewerTitle"></div>
+            <div id="viewerDesc"></div>
+          </div>
+
+          <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
+
+          <div class="viewerNavRight">
+            <span class="tri" id="btnCgPrev">◀</span>
+            <span class="kbd">←/→</span>
+            <span class="tri" id="btnCgNext">▶</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Save / Load -->
+    <div class="modal" id="saveLoadModal">
+
+      <div class="modalBox">
+
+        <div class="modalHead">
+          <div class="modalHeadLeft">
+            <div><b id="saveLoadTitle">저장</b> <span class="kbd">Esc=닫기</span></div>
+          </div>
+
+          <div class="modalHeadRight">
+            <div class="btn" id="btnSaveLoadClose">Close</div>
+          </div>
+        </div>
+
+        <div class="modalBody">
+          <div class="slotGrid" id="saveLoadGrid"></div>
+        </div>
+
+        <div class="modalFoot">
+          <div class="kbd">슬롯을 클릭하면 저장 또는 불러오기가 실행됩니다.</div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Heroine Codex -->
+    <div class="modal" id="codexModal">
+
+      <div class="modalBox" style="width:min(1080px,98vw);height:min(86vh,860px);">
+
+        <div class="modalHead">
+          <div class="modalHeadLeft">
+            <div><b>히로인 도감</b> <span class="kbd">L / Esc=닫기</span></div>
+          </div>
+
+          <div class="modalHeadRight">
+            <div class="btn" id="btnCodexClose">Close</div>
+          </div>
+        </div>
+
+        <div class="modalBody">
+          <div class="codexWrap">
+            <div class="codexList" id="codexList"></div>
+            <div class="codexInfo" id="codexInfo"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Death Screen -->
+    <div class="deathScreen" id="deathScreen">
+      <img class="deathBg" id="deathBg" alt="death scene">
+
+      <div class="deathMenu">
+        <button class="titleBtn" id="btnDeathToTitle">
+          메인화면으로
+        </button>
       </div>
     </div>
-	<!-- CG Viewer Modal -->
-	<div class="modal" id="cgViewerModal">
-	  <div class="viewerBox">
-		<div class="modalHead">
-		  <div class="modalHeadLeft">
-			<div><b>CG</b> <span class="kbd">Esc=닫기 · ←/→=넘기기</span></div>
-		  </div>
-		  <div class="modalHeadRight">
-			<div class="btn" id="btnViewerClose">Close</div>
-		  </div>
-		</div>
 
-		<div class="viewerBody">
-		  <div class="viewerImgWrap" id="viewerImgWrap">
-			<img id="viewerImg" alt="cg viewer" />
-			<div class="viewerLock" id="viewerLock" style="display:none;">아직 해금되지 않았습니다.</div>
-		  </div>
-		</div>
 
-		<div class="viewerFoot">
-		  <div class="viewerMetaLeft">
-			<div id="viewerTitle"></div>
-			<div id="viewerDesc"></div>
-		  </div>
+  </div>
 
-		  <div class="viewerCounterCenter" id="viewerCounter">0 / 0</div>
-
-		  <div class="viewerNavRight">
-			<span class="tri" id="btnCgPrev">◀</span>
-			<span class="kbd">←/→</span>
-			<span class="tri" id="btnCgNext">▶</span>
-		  </div>
-		</div>
-	  </div>
-	</div>
-
-	<!-- Save / Load Modal -->
-	<div class="modal" id="saveLoadModal">
-	  <div class="modalBox">
-		<div class="modalHead">
-		  <div class="modalHeadLeft">
-			<div><b id="saveLoadTitle">저장</b> <span class="kbd">Esc=닫기</span></div>
-		  </div>
-		  <div class="modalHeadRight">
-			<div class="btn" id="btnSaveLoadClose">Close</div>
-		  </div>
-		</div>
-
-		<div class="modalBody">
-		  <div class="slotGrid" id="saveLoadGrid"></div>
-		</div>
-
-		<div class="modalFoot">
-		  <div class="kbd">슬롯을 클릭하면 저장 또는 불러오기가 실행됩니다.</div>
-		</div>
-	  </div>
-	</div>
-
-	<!-- Heroine Codex Modal -->
-	<div class="modal" id="codexModal">
-	  <div class="modalBox" style="width:min(1080px,98vw);height:min(86vh,860px);">
-		<div class="modalHead">
-		  <div class="modalHeadLeft">
-			<div><b>히로인 도감</b> <span class="kbd">L / Esc=닫기</span></div>
-		  </div>
-		  <div class="modalHeadRight">
-			<div class="btn" id="btnCodexClose">Close</div>
-		  </div>
-		</div>
-
-		<div class="modalBody">
-		  <div class="codexWrap">
-			<div class="codexList" id="codexList"></div>
-			<div class="codexInfo" id="codexInfo"></div>
-		  </div>
-		</div>
-	  </div>
-	</div>
-
-	<!-- Death Scene -->
-	<div class="deathScreen" id="deathScreen">
-	  <img class="deathBg" id="deathBg" alt="death scene">
-	  <div class="deathMenu">
-		<button class="titleBtn" id="btnDeathToTitle">메인화면으로</button>
-	  </div>
-	</div>
-
+</body>
 <script>
 /* ============================================================================
   환웅전 일정/행동 시스템 버전
