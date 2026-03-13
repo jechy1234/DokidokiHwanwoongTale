@@ -1340,7 +1340,21 @@ var assets = {
 
 var names = {
   system: "...",
-  hwanung: "환웅",
+  noname: "알수없음",
+  hwanung: "나",
+  rabbit?: "토끼?",
+  monkey?: "원숭이?",
+  tiger?: "호랑이?",
+  snake?: "뱀?",
+  cow?: "소?",
+  horse?: "말?",
+  sheep?: "양?",
+  bear?: "곰?",
+  rat?: "쥐?",
+  pig?: "돼지?",
+  dog?: "개?",
+  chicken?: "닭?",
+  dragon?: "용?",
   rabbit: "묘묘",
   monkey: "지원",
   tiger: "호린",
@@ -1353,7 +1367,7 @@ var names = {
   pig: "복희",
   dog: "수윤",
   chicken: "유채",
-  dragon: "유진"
+  dragon: "유진",
 };
 
 var heroineKeys = [
@@ -3037,7 +3051,7 @@ function openPrologueBranchChoice(){
       text: "ㅈ..잠시 생각할 시간을 주시겠어요?",
       onClick: function(){
         playCutsceneFromCsv("prologue_b", function(){
-          goToPrologueCommon();
+          goToPrologueEnd();
         }).catch(function(err){
           console.error(err);
           toast("prologue_b 컷씬을 불러오지 못했습니다.");
@@ -3048,7 +3062,7 @@ function openPrologueBranchChoice(){
       text: "(아무 말도 하지 않는다.)",
       onClick: function(){
         playCutsceneFromCsv("prologue_c", function(){
-          goToPrologueCommon();
+          goToPrologueEnd();
         }).catch(function(err){
           console.error(err);
           toast("prologue_c 컷씬을 불러오지 못했습니다.");
@@ -3058,15 +3072,15 @@ function openPrologueBranchChoice(){
   ]);
 }
 
-function goToPrologueCommon(){
-  playCutsceneFromCsv("prologue_common", function(){
+function goToPrologueEnd(){
+  playCutsceneFromCsv("prologue_end", function(){
     state.day = 1;
     state.timeIndex = 1;
     state.energy = 100;
     enterRoom("환웅으로 눈을 뜬 1일차 아침이다.\n무얼 할까?");
   }).catch(function(err){
     console.error(err);
-    toast("prologue_common 컷씬을 불러오지 못했습니다.");
+    toast("prologue_end 컷씬을 불러오지 못했습니다.");
   });
 }
 
