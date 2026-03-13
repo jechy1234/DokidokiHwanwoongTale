@@ -15,6 +15,11 @@
 
       --boxH: 280px;
 
+      /* 대화창 공통 토큰 (1600x900 기준 px) */
+      --dlgBottom: 38px;
+      --dlgSide:   80px;
+      --dlgH:      198px;
+
       --baseW: 1600px;
       --baseH: 900px;
       --gameScale: 1;
@@ -160,6 +165,16 @@
       opacity:.55;
       filter:drop-shadow(0 18px 30px rgba(0,0,0,.45)) saturate(.85);
     }
+    
+    .char.btn-style {
+      cursor:pointer;
+      pointer-events:auto;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.5));
+    }
+    .char.btn-style:hover {
+      transform: scale(1.05);
+      filter: brightness(1.2) drop-shadow(0 15px 30px rgba(0,0,0,.6));
+    }
 
     .char.focus{
       opacity:1;
@@ -256,7 +271,7 @@
 
     /* 대화창 위 컨트롤 바 */
     .controlsRow{
-      margin:0 80px 10px;
+      margin:0 var(--dlgSide) 10px;
       display:flex;
       justify-content:flex-end;
       gap:10px;
@@ -266,8 +281,8 @@
     }
 
     .dialogue{
-      height:calc(100% - 44px);
-      margin:0 80px 38px;
+      height:var(--dlgH);
+      margin:0 var(--dlgSide) var(--dlgBottom);
       background:linear-gradient(180deg, rgba(8,10,16,.35), rgba(8,10,16,.75));
       border:1px solid var(--line);
       border-radius:18px;
@@ -315,7 +330,7 @@
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:0 80px 20px;
+      padding:0 var(--dlgSide) 20px;
       color:var(--muted);
       font-size:12px;
       gap:10px;
@@ -842,36 +857,49 @@
     
     .locTopMenu{
       position:absolute;
-      bottom:265px;
+      bottom:260px;  /* dialogue top + gap */
       left:50%;
       transform:translateX(-50%);
       z-index:20;
-    }
-    
-    .facilityOverlay {
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,0.6);
-      backdrop-filter:blur(10px);
-      display:none;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      z-index:90;
-      pointer-events:auto;
-      gap: 15px;
-    }
-    
-    .facilityOverlay.open {
       display:flex;
+      gap:10px;
     }
-    
-    .facilityOverlay .btn {
-      font-size: 18px;
-      padding: 15px 30px;
-      width: 300px;
-      text-align:center;
-      background:linear-gradient(180deg, rgba(8,10,16,.5), rgba(8,10,16,.85));
+
+    /* ===== locScreen 전용 메시지 박스 (dialogue와 동일 규격) ===== */
+    .locMessageWrap{
+      position:absolute;
+      left:0; right:0;
+      bottom:0;
+      height:var(--boxH);
+      z-index:15;
+      pointer-events:none;
+    }
+    .locMessageBox{
+      height:var(--dlgH);
+      margin:0 var(--dlgSide) var(--dlgBottom);
+      background:linear-gradient(180deg, rgba(8,10,16,.35), rgba(8,10,16,.75));
+      border:1px solid var(--line);
+      border-radius:18px;
+      backdrop-filter:blur(10px);
+      display:grid;
+      grid-template-rows:auto 1fr;
+      overflow:hidden;
+      box-shadow:0 16px 40px rgba(0,0,0,.45);
+      pointer-events:none;
+    }
+    .locMessageBox .nameplate{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.18);
+    }
+    .locMessageBox .nameplate .name{
+      display:inline-flex; align-items:center; gap:10px;
+      font-weight:800; letter-spacing:.2px;
+    }
+    .locMessageBox .textArea{
+      padding:14px; font-size:18px; line-height:1.7;
+      white-space:pre-wrap;
+      display:flex; align-items:center; justify-content:center;
     }
 
     /* ===== Interaction Menu ===== */
@@ -897,7 +925,7 @@
 
     .interactLeft{
       position:absolute;
-      left:10%;
+      left:160px;
       bottom:260px;
       width:400px;
       display:flex;
@@ -908,7 +936,7 @@
 
     .interactPortrait{
       width:100%;
-      max-height:85vh;
+      max-height:600px;
       object-fit:contain;
       object-position:bottom center;
       filter:drop-shadow(0 20px 40px rgba(0,0,0,.6));
@@ -916,7 +944,7 @@
 
     .interactRight{
       position:absolute;
-      right:10%;
+      right:160px;
       top:50%;
       transform:translateY(-50%);
       display:flex;
@@ -931,12 +959,13 @@
       gap:12px;
     }
 
+    /* interactGreeting: 공통 대화창 토큰 사용 */
     .interactGreeting{
       position:absolute;
-      bottom:38px;
-      left:80px;
-      right:80px;
-      height:216px;
+      bottom:var(--dlgBottom);
+      left:var(--dlgSide);
+      right:var(--dlgSide);
+      height:var(--dlgH);
       background:linear-gradient(180deg, rgba(8,10,16,.35), rgba(8,10,16,.75));
       border:1px solid var(--line);
       border-radius:18px;
@@ -1561,12 +1590,14 @@
 		  </div>
       
       <!-- SD View Message Box -->
-      <div id="locMessagePanel" class="dialogue" style="position:absolute; bottom:38px; left:80px; right:80px; pointer-events:none; z-index:100; margin:0;">
-        <div class="nameplate">
-          <div class="name">SYSTEM</div>
-        </div>
-        <div class="textArea" style="display:flex; align-items:center; justify-content:center;">
-          누구에게 말을 걸어볼까?
+      <div class="locMessageWrap">
+        <div id="locMessagePanel" class="locMessageBox">
+          <div class="nameplate">
+            <div class="name">SYSTEM</div>
+          </div>
+          <div class="textArea">
+            누구에게 말을 걸어볼까?
+          </div>
         </div>
       </div>
       
@@ -1592,15 +1623,6 @@
 			</div>
 		  </div>
 		</div>
-
-		<!-- Location Facility Menu -->
-    <div class="facilityOverlay" id="facilityScreen">
-      <div style="font-size:24px; font-weight:bold; color:#fff; margin-bottom:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8);">마을 시설물</div>
-      <button class="btn" id="btnFacShop">상점</button>
-      <button class="btn" id="btnFacInfo">정보상 (30 엽전)</button>
-      <button class="btn" id="btnFacCraft">공방</button>
-      <button class="btn" id="btnFacBack" style="margin-top:20px; border-color:#aaa;">거처로 돌아가기</button>
-    </div>
 
 		<!-- Workshop Screen -->
 		<div class="workshopScreen" id="workshopScreen">
@@ -1683,10 +1705,10 @@ var assets = {
 
     /* 있으면 사용, 없으면 자동 fallback */
     roomdawn:   "assets/bg/room_dawn.png",
-    roommorning:"assets/bg/room_morning.png",
+    roommorning: "assets/bg/room_morning.png",
     roomnoon:   "assets/bg/room_noon.png",
-    roomevening:"assets/bg/room_evening.png",
-    roommidnight:"assets/bg/room_midnight.png",
+    roomevening: "assets/bg/room_evening.png",
+    roommidnight: "assets/bg/room_midnight.png",
 	
 	/* 데스씬 이미지들 */
     death_lonely: "assets/bg/데드씬고독사.png",
@@ -1713,8 +1735,8 @@ var assets = {
     hwanung_sd: "assets/char/hwanung_sd.png",
 	hwanung_default: "assets/char/hwanung_default.png",
 	bear_default: "assets/char/bear_default.png",
-	mouse_default: "assets/char/bear_default.png",
-	cow_default: "assets/char/bear_default.png",
+	rat_default: "assets/char/rat_default.png",
+	cow_default: "assets/char/cow_default.png",
 	tiger_default: "assets/char/tiger_default.png",
 	rabbit_default: "assets/char/rabbit_default.png",
 	dragon_default: "assets/char/dragon_default.png",
@@ -1749,9 +1771,11 @@ var assets = {
 	prologue: "assets/audio/prologue.mp3"
   },
   sfx: {
-	click:  "assets/audio/sfx_click.mp3",
-    choice: "assets/audio/sfx_choice.mp3",
-	shake:  "assets/audio/sfx_shake.mp3",
+	click:   "assets/audio/sfx_click.mp3",
+    choice:  "assets/audio/sfx_choice.mp3",
+	shake:   "assets/audio/sfx_shake.mp3",
+	success: "assets/audio/sfx_success.mp3",
+	error:   "assets/audio/sfx_error.mp3",
   }
 };
 
@@ -2088,6 +2112,7 @@ var $locScreen = document.getElementById("locScreen");
 var $locBg = document.getElementById("locBg");
 var $btnLocBack = document.getElementById("btnLocBack");
 var $locSdContainer = document.getElementById("locSdContainer");
+var $locTopMenu = document.querySelector(".locTopMenu");
 
 var $interactScreen = document.getElementById("interactScreen");
 var $interactPortrait = document.getElementById("interactPortrait");
@@ -2130,8 +2155,6 @@ var $viewerDesc = document.getElementById("viewerDesc");
 var $hudLeft = document.querySelector(".hudLeft");
 var $hudCenter = document.getElementById("hudCenter");
 var $hudRight = document.querySelector(".hudRight");
-
-var $facilityScreen = document.getElementById("facilityScreen");
 
 var $saveLoadModal = document.getElementById("saveLoadModal");
 var $saveLoadTitle = document.getElementById("saveLoadTitle");
@@ -2477,7 +2500,9 @@ bgm.volume = 0.55;
 var sfx = {
   click: new Audio(),
   choice: new Audio(),
-  shake: new Audio()
+  shake: new Audio(),
+  success: new Audio(),
+  error: new Audio()
 };
 
 function applyAudio(){
@@ -2485,6 +2510,8 @@ function applyAudio(){
   if(assets.sfx && assets.sfx.click) sfx.click.src = assets.sfx.click;
   if(assets.sfx && assets.sfx.choice) sfx.choice.src = assets.sfx.choice;
   if(assets.sfx && assets.sfx.shake) sfx.shake.src = assets.sfx.shake;
+  if(assets.sfx && assets.sfx.success) sfx.success.src = assets.sfx.success;
+  if(assets.sfx && assets.sfx.error) sfx.error.src = assets.sfx.error;
 }
 function playSfx(name){
   var a = sfx[name];
@@ -2639,14 +2666,13 @@ function injectGameUiCss(){
   + "backdrop-filter:blur(6px);transition:transform .12s ease,background .12s ease;box-shadow:0 10px 24px rgba(0,0,0,.24);}"
   + ".roomHotspot:hover{transform:translateY(-2px);background:rgba(18,26,44,.42);}"
   + ".hotspotLabel{padding:10px 14px;font-size:14px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.35);white-space:pre-line;text-align:center;}"
-  + ".bedSpot{right:10vw;bottom:31vh;width:min(220px,24vw);height:min(120px,13vw);}"
-  + ".entranceSpot{left:3vw;top:26vh;width:min(220px,24vw);height:min(320px,34vh);border-radius:24px;}"
-  + ".inventorySpot{right:24vw;bottom:31vh;width:min(120px,12vw);height:min(120px,13vw);}"
-  + ".roomInfoCard{position:absolute;right:3vw;top:86px;pointer-events:none;z-index:12;padding:12px 14px;border-radius:18px;"
+  + ".bedSpot{right:160px;bottom:290px;width:220px;height:120px;}"
+  + ".entranceSpot{left:48px;top:234px;width:220px;height:306px;border-radius:24px;}"
+  + ".inventorySpot{right:360px;bottom:290px;width:120px;height:120px;}"
+  + ".roomInfoCard{position:absolute;right:48px;top:86px;pointer-events:none;z-index:12;padding:12px 14px;border-radius:18px;"
   + "border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.28);backdrop-filter:blur(8px);min-width:250px;}"
   + ".roomInfoTitle{font-weight:900;margin-bottom:8px;font-size:14px;}"
-  + ".roomInfoBody{font-size:13px;line-height:1.65;color:rgba(242,246,255,.8);white-space:pre-line;}"
-  + "@media (max-width:720px){.entranceSpot{left:2vw;top:23vh;width:28vw;height:28vh}.bedSpot{right:5vw;bottom:31vh;width:28vw;height:11vh}.roomInfoCard{right:4vw;top:92px;min-width:auto;width:44vw}.inventorySpot{right:25vw;bottom:31vh;width:22vw;height:11vh}}";
+  + ".roomInfoBody{font-size:13px;line-height:1.65;color:rgba(242,246,255,.8);white-space:pre-line;}";
   var style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
@@ -2734,7 +2760,7 @@ function hideTitle(){
   $titleScreen.setAttribute("aria-hidden","true");
 }
 
-function timeKey(){
+function getTimeKey(){
   if(state.timeIndex === 0) return "dawn";
   if(state.timeIndex === 1) return "morning";
   if(state.timeIndex === 2) return "noon";
@@ -2743,14 +2769,6 @@ function timeKey(){
 }
 function getTimeLabel(){
   return TIME_ICONS[state.timeIndex] + " " + TIME_NAMES[state.timeIndex];
-}
-
-function getTimeKey(){
-  if(state.timeIndex === 0) return "dawn";
-  if(state.timeIndex === 1) return "morning";
-  if(state.timeIndex === 2) return "noon";
-  if(state.timeIndex === 3) return "evening";
-  return "midnight";
 }
 
 function getLocationLabel(location){
@@ -2830,7 +2848,7 @@ function setBackground(key){
       noon: ["roomnoon"],
       evening: ["roomevening"],
       midnight: ["roommidnight"]
-    }[timeKey()] || ["caveday"];
+    }[getTimeKey()] || ["caveday"];
 
     for(var i=0;i<candidates.length;i++){
       if(assets.bg[candidates[i]]){
@@ -2939,7 +2957,13 @@ function updateHud(){
   updateRoomInfo();
   
   var hud = document.querySelector(".hud");
-  if(hud) hud.classList.add("show");
+  if(hud) {
+    if ($titleScreen.classList.contains("open")) {
+      hud.classList.remove("show");
+    } else {
+      hud.classList.add("show");
+    }
+  }
 }
 
 function openStandaloneInventory(){
@@ -3633,6 +3657,7 @@ function enterRoom(message){
   setBackground("room");
   applySlots({L:null,C:null,R:null});
   setRoomUiVisible(true);
+  $titleScreen.classList.remove("open"); // Ensure title screen is hidden
   updateHud(); // Re-shows the HUD as well
   $speaker.textContent = "SYSTEM";
   $text.textContent = message || (
@@ -3827,31 +3852,64 @@ function openCharacterSelect(mode, location){
   13.5) Location SD View & Interaction Menu
 ============================================================================ */
 
-function getLocTopMenu(location){
-  var menu = document.querySelector(".locTopMenu");
-  if(!menu) return;
-  menu.innerHTML = "";
-  
-  var backBtn = document.createElement("button");
-  backBtn.className = "btn";
-  backBtn.textContent = "돌아가기";
-  backBtn.onclick = function(){ playSfx("click"); closeLocationSdView(); enterRoom("거처로 돌아왔다."); };
-  menu.appendChild(backBtn);
-}
-
 function openLocationSdView(location){
   state.currentLocation = location;
+  $locScreen.classList.add("open");
+  setBackground(location === "village_facilities" ? "village" : location);
   updateHud();
+  
+  $locTopMenu.innerHTML = "";
+  var btnBack = document.createElement("div");
+  btnBack.className = "btn";
+  btnBack.textContent = "돌아가기";
+  btnBack.onclick = function(){ playSfx("click"); closeLocationSdView(); enterRoom("거처로 돌아왔다."); };
+  $locTopMenu.appendChild(btnBack);
+
+  $locSdContainer.innerHTML = "";
+  
+  if(location === "village_facilities"){
+    var facilities = [
+      { name: "상점", icon: "assets/icon/shop.png", onClick: openShop },
+      { name: "정보상", icon: "assets/icon/broker.png", onClick: openInfoBroker },
+      { name: "공방", icon: "assets/icon/workshop.png", onClick: openWorkshop }
+    ];
+    
+    facilities.forEach(function(f){
+      var div = document.createElement("div");
+      div.className = "char btn-style"; 
+      div.style.display = "flex";
+      div.style.flexDirection = "column";
+      div.style.alignItems = "center";
+      div.style.justifyContent = "center";
+      div.style.gap = "10px";
+      div.style.width = "200px";
+      
+      var img = document.createElement("img");
+      img.src = f.icon;
+      img.style.width = "180px";
+      img.style.height = "auto";
+      img.onerror = function(){ this.style.display="none"; };
+      
+      var label = document.createElement("div");
+      label.className = "pill";
+      label.textContent = f.name;
+      label.style.pointerEvents = "none";
+      
+      div.appendChild(img);
+      div.appendChild(label);
+      div.onclick = function(){ playSfx("click"); f.onClick(); };
+      $locSdContainer.appendChild(div);
+    });
+    
+    document.querySelector("#locMessagePanel .textArea").textContent = "마을의 어떤 시설을 방문할까?";
+    return;
+  }
 
   var heroines = getAvailableHeroines(location);
   var bgKey = locationToScene(location);
   var src = assets.bg[bgKey] || "";
   
   $locBg.src = src;
-  $locSdContainer.innerHTML = "";
-  getLocTopMenu(location);
-  
-  $locScreen.classList.add("open");
   
   var total = heroines.length;
   var startX = 50;
@@ -3889,6 +3947,8 @@ function openLocationSdView(location){
       $locSdContainer.appendChild(sdImg);
     })(heroines[i], i);
   }
+  
+  document.querySelector("#locMessagePanel .textArea").textContent = "누구에게 말을 걸어볼까?";
 }
 
 function closeLocationSdView(){
@@ -4275,21 +4335,12 @@ function randomSmallTalk(){
 
 function doTownVisit() {
   if(!spendEnergy(10)) return;
-  state.currentLocation = "village_facilities";
-  updateHud();
-  setBackground("village");
-  
-  $facilityScreen.classList.add("open");
   setRoomUiVisible(false);
+  openLocationSdView("village_facilities");
 }
 
-document.getElementById("btnFacShop").onclick = function(){ playSfx("click"); $facilityScreen.classList.remove("open"); openShop(); };
-document.getElementById("btnFacInfo").onclick = function(){ playSfx("click"); $facilityScreen.classList.remove("open"); openInfoBroker(); };
-document.getElementById("btnFacCraft").onclick = function(){ playSfx("click"); $facilityScreen.classList.remove("open"); openWorkshop(); };
-document.getElementById("btnFacBack").onclick = function(){ playSfx("click"); $facilityScreen.classList.remove("open"); enterRoom("마을 시설물 관람을 마치고 거처로 돌아왔다."); };
-
 function openLocFacilities(){
-  $facilityScreen.classList.add("open");
+  openLocationSdView("village_facilities");
 }
 
 function openShop(){
