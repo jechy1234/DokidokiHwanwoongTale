@@ -625,7 +625,6 @@
       background:rgba(18,26,44,.62);
     }
 
-    /* ===== CG Viewer ===== */
     .viewerBox{
       width:min(1020px, 98vw);
       height:min(82vh, 780px);
@@ -636,6 +635,28 @@
       box-shadow:0 16px 40px rgba(0,0,0,.55);
       display:grid;
       grid-template-rows:auto 1fr auto;
+    }
+    
+    /* ===== Character Effects ===== */
+    @keyframes shakeChar {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(-10px, 5px); }
+      40% { transform: translate(10px, -5px); }
+      60% { transform: translate(-10px, -5px); }
+      80% { transform: translate(10px, 5px); }
+      100% { transform: translate(0, 0); }
+    }
+    .shakeChar {
+      animation: shakeChar 0.3s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    
+    @keyframes zoomChar {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15) translateY(-5%); }
+      100% { transform: scale(1); }
+    }
+    .zoomChar {
+      animation: zoomChar 0.6s ease-out both;
     }
 
     .viewerBody{
@@ -754,6 +775,131 @@
 
     .tri:hover{
       background:rgba(18,26,44,.55);
+    }
+
+    /* ===== Interactive Location SD View ===== */
+    .locScreen{
+      position:absolute;
+      inset:0;
+      display:none;
+      z-index:45;
+      background:#000;
+      pointer-events:auto;
+    }
+
+    .locScreen.open{
+      display:block;
+    }
+
+    .locBg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .locSdContainer{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:10;
+    }
+
+    .locSdChar{
+      position:absolute;
+      width:180px;
+      height:auto;
+      cursor:pointer;
+      pointer-events:auto;
+      filter:drop-shadow(0 10px 20px rgba(0,0,0,.5));
+      transition:transform 0.15s ease, filter 0.15s ease;
+      transform:translate(-50%, -100%);
+    }
+
+    .locSdChar:hover{
+      transform:translate(-50%, -102%) scale(1.05);
+      filter:drop-shadow(0 15px 30px rgba(0,0,0,.7)) brightness(1.1);
+    }
+    
+    .locTopMenu{
+      position:absolute;
+      top:18px;
+      right:18px;
+      z-index:20;
+    }
+
+    /* ===== Interaction Split Menu ===== */
+    .interactScreen{
+      position:absolute;
+      inset:0;
+      display:none;
+      z-index:50;
+      background:rgba(0,0,0,.75);
+      backdrop-filter:blur(10px);
+      pointer-events:auto;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .interactScreen.open{
+      display:flex;
+    }
+
+    .interactPanel{
+      width:min(1200px, 94vw);
+      height:min(720px, 85vh);
+      display:grid;
+      grid-template-columns: 450px 1fr;
+      gap:20px;
+      position:relative;
+    }
+
+    .interactLeft{
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      align-items:center;
+      position:relative;
+    }
+
+    .interactPortrait{
+      width:100%;
+      max-height:85vh;
+      object-fit:contain;
+      object-position:bottom center;
+      filter:drop-shadow(0 20px 40px rgba(0,0,0,.6));
+    }
+
+    .interactRight{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:16px;
+      padding:20px;
+    }
+    
+    .interactChoices{
+      display:grid;
+      gap:12px;
+    }
+
+    .interactGreeting{
+      margin-top:20px;
+      background:rgba(12,16,26,.85);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:16px;
+      padding:20px;
+      font-size:18px;
+      line-height:1.6;
+      box-shadow:0 10px 30px rgba(0,0,0,.5);
+    }
+
+    .interactGreeting .name{
+      font-weight:900;
+      color:var(--accent);
+      margin-bottom:8px;
+      font-size:20px;
     }
 
     /* ===== Death Scene ===== */
@@ -915,6 +1061,103 @@
       .slotGrid{
         grid-template-columns:1fr;
       }
+    }
+    
+    /* ===== Workshop Screen ===== */
+    .workshopScreen{
+      position:absolute; inset:0; z-index:900;
+      background:rgba(10,14,25,0.95);
+      display:none; 
+      flex-direction:column; align-items:center; justify-content:center;
+      color:#fff;
+    }
+    .workshopScreen.open { display:flex; }
+    
+    .wsCloseBtn { position:absolute; top:20px; right:20px; z-index:10; }
+    
+    .wsContainer {
+      display:flex; width:min(1000px, 95vw); height:min(600px, 80vh);
+      background:rgba(20,25,40,0.8); border:1px solid rgba(255,255,255,0.2);
+      border-radius:12px; overflow:hidden;
+    }
+    .wsHead {
+      text-align:center; padding:10px; background:rgba(0,0,0,0.3);
+      font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* Left: Recipe Book */
+    .wsLeft {
+      flex:1; border-right:1px solid rgba(255,255,255,0.1);
+      display:flex; flex-direction:column;
+    }
+    .wsRecipeList {
+      flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px;
+    }
+    .wsRecipeItem {
+      display:flex; align-items:center; gap:10px; padding:10px;
+      background:rgba(255,255,255,0.05); border-radius:8px; cursor:pointer;
+    }
+    .wsRecipeItem:hover { background:rgba(255,255,255,0.1); }
+    .wsRecipeItem img { width:40px; height:40px; object-fit:contain; }
+    .wsRecipeItem span { font-size:14px; }
+    
+    /* Center: Drop Zone */
+    .wsCenter {
+      flex:1.5; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      position:relative;
+    }
+    .wsGrid {
+      display:grid; grid-template-columns:1fr 1fr; gap:15px;
+      margin-bottom:30px;
+    }
+    .wsSlot {
+      width:80px; height:80px; border:2px dashed rgba(255,255,255,0.3);
+      border-radius:10px; display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.2); cursor:pointer; transition:all 0.2s;
+    }
+    .wsSlot:hover { border-color:#fff; background:rgba(255,255,255,0.1); }
+    .wsSlot img { width:80%; height:80%; object-fit:contain; pointer-events:none; }
+    #btnCraft { padding:10px 20px; font-size:16px; }
+    
+    /* Right: Inventory */
+    .wsRight {
+      flex:1; border-left:1px solid rgba(255,255,255,0.1);
+      display:flex; flex-direction:column;
+    }
+    .wsInventory {
+      flex:1; overflow-y:auto; padding:10px;
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(65px, 1fr));
+      grid-auto-rows:max-content; gap:10px; align-content:start;
+    }
+    .wsInvItem {
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      padding:5px; background:rgba(255,255,255,0.05); border-radius:6px;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .wsInvItem:hover { background:rgba(255,255,255,0.1); transform:translateY(-2px); }
+    .wsInvItem.selected { background:rgba(100,200,255,0.3); border:1px solid #64c8ff; }
+    .wsInvItem img { width:40px; height:40px; object-fit:contain; margin-bottom:5px; pointer-events:none;}
+    .wsInvItem span { font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; pointer-events:none;}
+    .wsInvItem .qty { font-size:10px; color:#aaa; pointer-events:none;}
+    
+    /* Bottom Msg */
+    .wsMsgBox {
+      margin-top:15px; width:min(1000px, 95vw); text-align:center;
+      background:rgba(10,14,25,0.85); border:1px solid rgba(255,255,255,0.15);
+      border-radius:8px; padding:15px; min-height:50px; font-size:16px;
+    }
+    
+    /* Result Fade Animation */
+    .wsResultText {
+      position:absolute; top:40%; left:50%; transform:translate(-50%, -50%) scale(0.5);
+      font-size:80px; font-weight:bold; color:#ffdd55; text-shadow:0 0 20px #ffaa00;
+      opacity:0; pointer-events:none; z-index:1000; transition:all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .wsResultText.show {
+      opacity:1; transform:translate(-50%, -50%) scale(1);
+    }
+    .wsResultText.fail {
+      color:#ff5555; text-shadow:0 0 20px #aa0000;
     }
   </style>
 </head>
@@ -1224,14 +1467,79 @@
 			  </div>
 			</div>
 
-			<div class="modalFoot">
+    			<div class="modalFoot">
 			  <div class="kbd">작은 화면에서는 자동으로 축소됩니다.</div>
 			</div>
 
 		  </div>
 
 		</div>
-				<!-- Death Screen -->
+
+		<!-- Interactive Location SD View -->
+		<div class="locScreen" id="locScreen">
+		  <img class="locBg" id="locBg" alt="location background">
+		  <div class="locTopMenu">
+			<button class="btn" id="btnLocBack">돌아가기 (행동력 미소모)</button>
+		  </div>
+		  <div class="locSdContainer" id="locSdContainer">
+			<!-- SD 캐릭터 동적 삽입 -->
+		  </div>
+      
+      <!-- SD View Message Box -->
+      <div id="locMessagePanel" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:min(700px, 90vw); background:rgba(10,14,25,0.85); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:15px; color:#fff; text-align:center; font-size:16px; pointer-events:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); z-index:100;">
+        누구에게 말을 걸어볼까?
+      </div>
+      
+		</div>
+
+		<!-- Interaction Split Menu -->
+		<div class="interactScreen" id="interactScreen">
+		  <div class="interactPanel">
+			<div class="interactLeft">
+			  <img class="interactPortrait" id="interactPortrait" alt="portrait" src="">
+			</div>
+			<div class="interactRight">
+			  <div class="interactChoices" id="interactChoices">
+				<!-- 선택지 버튼 동적 삽입 -->
+			  </div>
+			  <div class="interactGreeting" id="interactGreeting">
+				<div class="name" id="interactName">이름</div>
+				<div id="interactText">대화 내용</div>
+			  </div>
+			</div>
+		  </div>
+		</div>
+
+		<!-- Workshop Screen -->
+		<div class="workshopScreen" id="workshopScreen">
+		  <button class="btn wsCloseBtn" id="btnWsClose">돌아가기</button>
+		  <div class="wsContainer">
+			<div class="wsLeft">
+			  <div class="wsHead">조합 도감</div>
+			  <div class="wsRecipeList" id="wsRecipeList"></div>
+			</div>
+			<div class="wsCenter">
+			  <div class="wsHead">공방 슬롯</div>
+			  <div class="wsGrid">
+				<div class="wsSlot" data-idx="0"></div>
+				<div class="wsSlot" data-idx="1"></div>
+				<div class="wsSlot" data-idx="2"></div>
+				<div class="wsSlot" data-idx="3"></div>
+			  </div>
+			  <button class="btn" id="btnCraft">제작하기 (행동력 5)</button>
+			</div>
+			<div class="wsRight">
+			  <div class="wsHead">보유 아이템</div>
+			  <div class="wsInventory" id="wsInventory"></div>
+			</div>
+		  </div>
+		  <div class="wsMsgBox" id="wsMsgBox">
+		    아이템을 슬롯으로 드래그하거나 클릭하여 올리세요.
+		  </div>
+      <div class="wsResultText" id="wsResultText">성공!</div>
+		</div>
+
+		<!-- Death Screen -->
 		<div class="deathScreen" id="deathScreen">
 		  <img class="deathBg" id="deathBg" alt="death scene">
 
@@ -1342,37 +1650,37 @@ var names = {
   system: "...",
   noname: "알수없음",
   hwanung: "나",
-  rabbit0: "토끼?",
-  monkey0: "원숭이?",
-  tiger0: "호랑이?",
-  snake0: "뱀?",
-  cow0: "소?",
-  horse0: "말?",
-  sheep0: "양?",
   bear0: "곰?",
   rat0: "쥐?",
-  pig0: "돼지?",
-  dog0: "개?",
-  chicken0: "닭?",
+  cow0: "소?",
+  tiger0: "호랑이?",
+  rabbit0: "토끼?",
   dragon0: "용?",
-  rabbit: "묘묘",
-  monkey: "지원",
-  tiger: "호린",
-  snake: "설아",
-  cow: "우정",
-  horse: "마리",
-  sheep: "미연",
+  snake0: "뱀?",
+  horse0: "말?",
+  sheep0: "양?",
+  monkey0: "원숭이?",
+  chicken0: "닭?",
+  dog0: "개?",
+  pig0: "돼지?",
   bear: "웅혜",
   rat: "서연",
-  pig: "복희",
-  dog: "수윤",
-  chicken: "유채",
+  cow: "우정",
+  tiger: "호린",
+  rabbit: "묘묘",
   dragon: "유진",
+  snake: "설아",
+  horse: "마리",
+  sheep: "미연",
+  monkey: "지원",
+  chicken: "유채",
+  dog: "수윤",
+  pig: "복희",
 };
 
 var heroineKeys = [
-  "rabbit","monkey","tiger","snake","cow","horse","sheep",
-  "bear","rat","pig","dog","chicken","dragon"
+  "bear", "rat", "cow", "tiger", "rabbit", "dragon",
+  "snake", "horse", "sheep", "monkey", "chicken", "dog", "pig"
 ];
 
 /* ============================================================================
@@ -1388,6 +1696,8 @@ var state = {
   timeIndex: 1,
   energy: 100,
   maxEnergy: 200,
+  money: 0,
+  inventory: {},
   scene: "room",
   currentLocation: "room",
   backlog: [],
@@ -1663,6 +1973,18 @@ var $btnScreenClose = document.getElementById("btnScreenClose");
 var $btnScale1 = document.getElementById("btnScale1");
 var $btnScale2 = document.getElementById("btnScale2");
 var $btnScale3 = document.getElementById("btnScale3");
+
+// Location / Interact 
+var $locScreen = document.getElementById("locScreen");
+var $locBg = document.getElementById("locBg");
+var $btnLocBack = document.getElementById("btnLocBack");
+var $locSdContainer = document.getElementById("locSdContainer");
+
+var $interactScreen = document.getElementById("interactScreen");
+var $interactPortrait = document.getElementById("interactPortrait");
+var $interactChoices = document.getElementById("interactChoices");
+var $interactName = document.getElementById("interactName");
+var $interactText = document.getElementById("interactText");
 var $btnFullscreenOn = document.getElementById("btnFullscreenOn");
 var $btnFullscreenOff = document.getElementById("btnFullscreenOff");
 var $screenModeText = document.getElementById("screenModeText");
@@ -2514,6 +2836,15 @@ function renderCurrentLine(){
   if(line.effects){
     if(line.effects.indexOf("shakeUI") !== -1) shakeUI();
     if(line.effects.indexOf("shakeStage") !== -1) shakeStage();
+    
+    // Character targeting effects
+    if(line.effects.indexOf("shakeCharL") !== -1) { $charL.classList.remove("shakeChar"); void $charL.offsetWidth; $charL.classList.add("shakeChar"); }
+    if(line.effects.indexOf("shakeCharC") !== -1) { $charC.classList.remove("shakeChar"); void $charC.offsetWidth; $charC.classList.add("shakeChar"); }
+    if(line.effects.indexOf("shakeCharR") !== -1) { $charR.classList.remove("shakeChar"); void $charR.offsetWidth; $charR.classList.add("shakeChar"); }
+    
+    if(line.effects.indexOf("zoomCharL") !== -1) { $charL.classList.remove("zoomChar"); void $charL.offsetWidth; $charL.classList.add("zoomChar"); }
+    if(line.effects.indexOf("zoomCharC") !== -1) { $charC.classList.remove("zoomChar"); void $charC.offsetWidth; $charC.classList.add("zoomChar"); }
+    if(line.effects.indexOf("zoomCharR") !== -1) { $charR.classList.remove("zoomChar"); void $charR.offsetWidth; $charR.classList.add("zoomChar"); }
   }
 
   if(line.slots) applySlots(line.slots);
@@ -2737,6 +3068,8 @@ function normalizeState(obj){
   if(typeof obj.timeIndex !== "number") obj.timeIndex = 1;
   if(typeof obj.energy !== "number") obj.energy = 100;
   if(typeof obj.maxEnergy !== "number") obj.maxEnergy = 200;
+  if(typeof obj.money !== "number") obj.money = 0;
+  if(!obj.inventory || typeof obj.inventory !== "object") obj.inventory = {};
   if(!obj.scene) obj.scene = "room";
   if(!Array.isArray(obj.backlog)) obj.backlog = [];
   if(!obj.gallery || typeof obj.gallery !== "object") obj.gallery = {};
@@ -2767,13 +3100,17 @@ function save(){
 function load(){
   openSaveLoadModal("load");
 }
+
 function resetGame(){
+  // Reset to initial defaults
   state = {
     day: 1,
     maxDay: 21,
     timeIndex: 1,
     energy: 100,
     maxEnergy: 200,
+    money: 0,
+    inventory: {},
     scene: "room",
     currentLocation: "room",
     backlog: [],
@@ -2783,6 +3120,7 @@ function resetGame(){
     slots: {L:null,C:null,R:null},
     eventSeen: freshEventSeen(),
     heroineSeen: freshHeroineSeen(),
+    askedQuestions: {},
     deathScene: {
       active: false,
       bgKey: ""
@@ -2793,14 +3131,19 @@ function resetGame(){
 }
 
 /* ============================================================================
-  12.5) Google Sheet Cutscene Loader
+  12.5) Google Sheet Data Loader
 ============================================================================ */
 
 var GOOGLE_SHEET_ID = "1zvmn0p1eSDqHpxhQuHgG7QEpnWvmIQtm1nLQvXR1zF8";
-var GOOGLE_SHEET_TAB = "script";
 
 var cutsceneTable = [];
-var cutsceneTableLoaded = false;
+var itemsTable = [];
+var dialoguesTable = [];
+var preferencesTable = [];
+var questionsTable = [];
+var recipesTable = [];
+var rumorsTable = [];
+var gameDataLoaded = false;
 
 function extractGoogleSheetJson(text){
   var prefix = "google.visualization.Query.setResponse(";
@@ -2850,24 +3193,40 @@ function buildGoogleSheetUrl(sheetName){
     + "&tqx=out:json";
 }
 
-async function loadCutsceneCsv(url){
-
-  var target = url || buildGoogleSheetUrl(GOOGLE_SHEET_TAB);
-
+async function loadGoogleSheetTab(sheetName){
+  var target = buildGoogleSheetUrl(sheetName);
   var res = await fetch(target);
-
   if(!res.ok){
-    throw new Error("구글 시트 로드 실패");
+    throw new Error("구글 시트 로드 실패: " + sheetName);
   }
-
   var text = await res.text();
-
   var json = extractGoogleSheetJson(text);
+  return googleTableToObjects(json.table);
+}
 
-  cutsceneTable = googleTableToObjects(json.table);
+async function loadAllGameData(){
+  try {
+    cutsceneTable = await loadGoogleSheetTab("script");
+    
+    // 이 탭들은 없어도 무시하도록 예외 처리.
+    itemsTable = await loadGoogleSheetTab("items").catch(function(e){ return []; });
+    dialoguesTable = await loadGoogleSheetTab("dialogues").catch(function(e){ return []; });
+    preferencesTable = await loadGoogleSheetTab("preferences").catch(function(e){ return []; });
+    questionsTable = await loadGoogleSheetTab("questions").catch(function(e){ return []; });
+    recipesTable = await loadGoogleSheetTab("recipes").catch(function(e){ return []; });
+    rumorsTable = await loadGoogleSheetTab("rumors").catch(function(e){ return []; });
+    
+    gameDataLoaded = true;
+  } catch(err) {
+    console.error(err);
+    throw err;
+  }
+}
 
-  cutsceneTableLoaded = true;
-
+async function loadCutsceneCsv(){
+  if(!gameDataLoaded){
+    await loadAllGameData();
+  }
   return cutsceneTable;
 }
 
@@ -2939,8 +3298,8 @@ async function playCutsceneFromCsv(cutsceneName, afterFn){
     applySlots({ L:null, C:null, R:null });
     setBackground("none");
 
-    if(!cutsceneTableLoaded){
-      await loadCutsceneCsv();
+    if(!gameDataLoaded){
+      await loadAllGameData();
     }
 
     if(!hasCutsceneRows(cutsceneName)){
@@ -3184,11 +3543,10 @@ function confirmSleep(){
 }
 
 function openActionMenu(){
-  var dateCandidates = getDateCandidates();
   showChoices([
     {
-      text: "산책 -20",
-      onClick: function(){ openLocationMenu("walk"); }
+      text: "산책 (장소 이동)",
+      onClick: function(){ openLocationMenu("locview"); }
     },
     {
       text: "마을 방문 -10",
@@ -3199,11 +3557,6 @@ function openActionMenu(){
       onClick: function(){ openLocationMenu("explore"); }
     },
     {
-      text: "데이트 신청" + (dateCandidates.length ? "" : " (호감도 50 이상 필요)"),
-      disabled: !dateCandidates.length,
-      onClick: function(){ openDateMenu(); }
-    },
-    {
       text: "돌아가기",
       onClick: function(){ enterRoom("행동을 취소하고 다시 생각해보기로 했다."); }
     }
@@ -3211,15 +3564,35 @@ function openActionMenu(){
 }
 
 function openLocationMenu(mode){
+  var title = mode === "locview" ? "어디로 갈까?" : "어디를 탐색할까?";
   showChoices([
-    { text: "숲길", onClick: function(){ openCharacterSelect(mode, "forest"); } },
-    { text: "호수", onClick: function(){ openCharacterSelect(mode, "lake"); } },
-    { text: "들판", onClick: function(){ openCharacterSelect(mode, "field"); } },
-    { text: "산", onClick: function(){ openCharacterSelect(mode, "mountain"); } },
-    { text: "마을", onClick: function(){ openCharacterSelect(mode, "village"); } },
-    { text: "신단", onClick: function(){ openCharacterSelect(mode, "shrine"); } },
+    { text: "숲길", onClick: function(){ handleLocationSelect(mode, "forest"); } },
+    { text: "호수", onClick: function(){ handleLocationSelect(mode, "lake"); } },
+    { text: "들판", onClick: function(){ handleLocationSelect(mode, "field"); } },
+    { text: "산", onClick: function(){ handleLocationSelect(mode, "mountain"); } },
+    { text: "마을", onClick: function(){ handleLocationSelect(mode, "village"); } },
+    { text: "신단", onClick: function(){ handleLocationSelect(mode, "shrine"); } },
     { text: "돌아가기", onClick: function(){ openActionMenu(); } }
   ]);
+}
+
+function handleLocationSelect(mode, location){
+  if(mode === "locview"){
+    openLocationSdView(location);
+  } else if(mode === "explore") {
+    doExploreLocation(location);
+  }
+}
+
+function doExploreLocation(location) {
+  if(!spendEnergy(30)) return;
+  
+  var earnedMoney = Math.floor(Math.random() * 51) + 10; // 10 ~ 60 엽전
+  state.money += earnedMoney;
+  
+  var placeName = getLocationLabel(location);
+  enterRoom(placeName + "을(를) 탐색하여 " + earnedMoney + " 엽전을 얻었다!");
+  advanceAfterAction();
 }
 
 function openCharacterSelect(mode, location){
@@ -3255,19 +3628,434 @@ function openCharacterSelect(mode, location){
   showChoices(choices);
 }
 
-function openDateMenu(){
-  var list = getDateCandidates();
-  var choices = [];
-  for(var i=0;i<list.length;i++){
-    (function(key){
-      choices.push({
-        text: names[key] + "에게 데이트를 신청한다 -" + ACTION_COST.date,
-        onClick: function(){ startDateEvent(key); }
-      });
-    })(list[i]);
+/* ============================================================================
+  13.5) Location SD View & Interaction Menu
+============================================================================ */
+
+function getLocTopMenu(location){
+  var menu = document.querySelector(".locTopMenu");
+  if(!menu) return;
+  menu.innerHTML = "";
+  
+  if(location === "village"){
+    var shopBtn = document.createElement("button");
+    shopBtn.className = "btn";
+    shopBtn.textContent = "상점";
+    shopBtn.onclick = function(){ playSfx("click"); openShop(); };
+    menu.appendChild(shopBtn);
+    
+    var infoBtn = document.createElement("button");
+    infoBtn.className = "btn";
+    infoBtn.textContent = "정보상 (30 엽전)";
+    infoBtn.onclick = function(){ playSfx("click"); openInfoBroker(); };
+    menu.appendChild(infoBtn);
+    
+    var craftBtn = document.createElement("button");
+    craftBtn.className = "btn";
+    craftBtn.textContent = "공방";
+    craftBtn.onclick = function(){ playSfx("click"); openWorkshop(); };
+    menu.appendChild(craftBtn);
   }
-  choices.push({ text: "돌아가기", onClick: function(){ openActionMenu(); } });
+  
+  var backBtn = document.createElement("button");
+  backBtn.className = "btn";
+  backBtn.textContent = "돌아가기";
+  backBtn.onclick = function(){ playSfx("click"); closeLocationSdView(); enterRoom("거처로 돌아왔다."); };
+  menu.appendChild(backBtn);
+}
+
+function openLocationSdView(location){
+  var heroines = getAvailableHeroines(location);
+  var bgKey = locationToScene(location);
+  var src = assets.bg[bgKey] || "";
+  
+  $locBg.src = src;
+  $locSdContainer.innerHTML = "";
+  getLocTopMenu(location);
+  
+  $locScreen.classList.add("open");
+  
+  var total = heroines.length;
+  var startX = 50;
+  if(total > 1) startX = 30;
+  var stepX = total > 1 ? 40 / (total - 1) : 0;
+  
+  if(total === 0){
+    var emptyMsg = document.createElement("div");
+    emptyMsg.className = "hotspotLabel";
+    emptyMsg.style.position = "absolute";
+    emptyMsg.style.left = "50%";
+    emptyMsg.style.top = "50%";
+    emptyMsg.style.transform = "translate(-50%, -50%)";
+    emptyMsg.style.color = "white";
+    emptyMsg.textContent = "아무도 없는 것 같다...";
+    $locSdContainer.appendChild(emptyMsg);
+  }
+
+  for(var i=0; i<total; i++){
+    (function(heroine, idx){
+      var sdImg = document.createElement("img");
+      sdImg.className = "locSdChar";
+      var sdSrc = assets.char[heroine + "_default"] || getHeroinePortrait(heroine);
+      sdImg.src = sdSrc;
+      
+      var posX = startX + (stepX * idx);
+      sdImg.style.left = posX + "%";
+      sdImg.style.bottom = "20px";
+      
+      sdImg.addEventListener("click", function(){
+        playSfx("click");
+        openInteractionView(heroine, location);
+      });
+      
+      $locSdContainer.appendChild(sdImg);
+    })(heroines[i], i);
+  }
+}
+
+function closeLocationSdView(){
+  $locScreen.classList.remove("open");
+}
+
+function getGreetingLine(heroine){
+  // 구글 시트에서 불러온 dialoguesTable에서 추출
+  // type === "greeting" 인 대사 중 랜덤
+  if(!dialoguesTable || dialoguesTable.length === 0){
+    return heroineFlavor(heroine); // 폴백 (기존 텍스트)
+  }
+  var greetings = dialoguesTable.filter(function(row){
+    return row.heroine === heroine && row.type === "greeting";
+  });
+  if(greetings.length > 0){
+    return rand(greetings).text;
+  }
+  return heroineFlavor(heroine);
+}
+
+function openInteractionView(heroine, location){
+  $interactScreen.classList.add("open");
+  
+  // 포트레이트
+  $interactPortrait.src = getHeroinePortrait(heroine);
+  
+  // 인사말 
+  $interactName.textContent = names[heroine];
+  $interactText.textContent = getGreetingLine(heroine);
+  
+  renderInteractionChoices(heroine, location);
+}
+
+function closeInteractionView(){
+  $interactScreen.classList.remove("open");
+}
+
+function renderInteractionChoices(heroine, location){
+  $interactChoices.innerHTML = "";
+  
+  var dateCandidates = getDateCandidates();
+  var canDate = dateCandidates.indexOf(heroine) !== -1;
+  
+  // Affection Icon Logic
+  var aff = state.affection[heroine] || 0;
+  var affIcon = "";
+  if(aff >= 90) affIcon = "💗 ";
+  else if(aff >= 60) affIcon = "💕 ";
+  else if(aff >= 30) affIcon = "❣️ ";
+  
+  var choiceList = [
+    {
+      text: affIcon + "대화하기 (행동력 0)",
+      onClick: function(){ startTalkAction(heroine, location); }
+    },
+    {
+      text: "선물하기 (행동력 0)",
+      onClick: function(){ openGiftInventory(heroine, location); }
+    },
+    {
+      text: "같이 산책하기 (행동력 -5)",
+      onClick: function(){ startWalkEvent(heroine, location); }
+    },
+    {
+      text: "데이트 신청" + (canDate ? "" : " (호감도 50 이상 필요)"),
+      disabled: !canDate,
+      onClick: function(){ startDateEvent(heroine, location); }
+    },
+    {
+      text: "돌아가기",
+      onClick: function(){ closeInteractionView(); }
+    }
+  ];
+  
+  for(var i=0; i<choiceList.length; i++){
+    var c = choiceList[i];
+    var btn = document.createElement("button");
+    btn.className = "midChoice";
+    btn.textContent = (i+1) + ". " + c.text;
+    if(c.disabled){
+      btn.disabled = true;
+      btn.style.opacity = "0.45";
+      btn.style.cursor = "not-allowed";
+    }else{
+      (function(onClickFunc){
+        btn.addEventListener("click", function(){
+          playSfx("click");
+          onClickFunc();
+        });
+      })(c.onClick);
+    }
+    $interactChoices.appendChild(btn);
+  }
+}
+
+
+function getTalkSceneByLocation(location){
+  if(location === "mountain") return "forestsunset";
+  if(location === "shrine") return "palace";
+  return "forestday";
+}
+
+function startTalkAction(heroine, location){
+  closeInteractionView();
+  closeLocationSdView();
+  
+  var scene = getTalkSceneByLocation(location);
+  var place = getLocationLabel(location);
+  state.currentLocation = location;
+  markHeroineSeen(heroine);
+  
+  // 특수 컷씬 우선 체크 (우선순위 높음)
+  var ev = getTriggeredEvent("walk", location, heroine); // 편의상 walk로 통일
+  if(ev){
+    setEventSeen(ev.id);
+    playCutsceneFromCsv(ev.cutscene, function(){
+      gainAffection(heroine, 5);
+      pushBacklog("SYSTEM", names[heroine] + " 호감도 +5");
+      enterRoom("특별한 대화 후 동굴로 돌아왔다.");
+    });
+    return;
+  }
+  
+  // 질문 목록 체크 (구글 시트 questions 테이블)
+  if(!state.askedQuestions) state.askedQuestions = {};
+  
+  var availableQs = questionsTable ? questionsTable.filter(function(q){
+    return q.heroine === heroine && !state.askedQuestions[q.question_id];
+  }) : [];
+  
+  // 질문이 남아있으면 최대 3개 랜덤 추출 후 선택지 표시
+  if(availableQs.length > 0){
+    // 배열 랜덤 섞기
+    for(var k = availableQs.length - 1; k > 0; k--){
+      var j = Math.floor(Math.random() * (k + 1));
+      var temp = availableQs[k];
+      availableQs[k] = availableQs[j];
+      availableQs[j] = temp;
+    }
+    
+    var pickedQs = availableQs.slice(0, 3);
+    var choices = [];
+    
+    for(var i=0; i<pickedQs.length; i++){
+      (function(qObj){
+        choices.push({
+          text: qObj.title || "질문하기",
+          onClick: function(){
+            state.askedQuestions[qObj.question_id] = true;
+            // 컷씬 아이디를 바로 재생
+            if(qObj.cutscene){
+              playCutsceneFromCsv(qObj.cutscene, function(){
+                gainAffection(heroine, 3);
+                pushBacklog("SYSTEM", names[heroine] + " 호감도 +3");
+                enterRoom("대화 후 동굴로 돌아왔다.");
+              }).catch(function(err){
+                console.error(err);
+                toast(qObj.cutscene + " 컷씬이 누락되었습니다. 임시대화 출력.");
+                fallbackTalk(heroine, scene);
+              });
+            } else {
+              fallbackTalk(heroine, scene);
+            }
+          }
+        });
+      })(pickedQs[i]);
+    }
+    
+    choices.push({ text: "돌아가기", onClick: function(){ enterRoom("아무 말도 하지 않고 돌아왔다."); } });
+    
+    setBackground(scene);
+    showChoices(choices);
+    
+  } else {
+    // 남은 질문이 0개라면 (폴백 일반 대사)
+    fallbackTalk(heroine, scene);
+  }
+}
+
+function fallbackTalk(heroine, scene){
+  var dialogues = dialoguesTable ? dialoguesTable.filter(function(row){
+    return row.heroine === heroine && (row.type === "taste" || row.type === "location" || row.type === "backstory");
+  }) : [];
+  
+  var lineText = dialogues.length ? rand(dialogues).text : randomSmallTalk();
+  
+  startScript([
+    {
+      who: heroine,
+      scene: scene,
+      text: lineText
+    },
+    {
+      who: "hwanung",
+      scene: scene,
+      text: "이런저런 이야기를 나누며 즐거운 시간을 보냈다."
+    }
+  ], function(){
+    gainAffection(heroine, 2);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +2");
+    enterRoom("가볍게 대화를 나누고 동굴로 복귀했다.");
+  });
+}
+
+function openGiftInventory(heroine, location){
+  if(!state.inventory || Object.keys(state.inventory).length === 0){
+    toast("가진 물건이 없습니다.");
+    return;
+  }
+  
+  var choices = [];
+  for(var itemId in state.inventory){
+    if(!state.inventory.hasOwnProperty(itemId)) continue;
+    var count = state.inventory[itemId];
+    if(count <= 0) continue;
+    
+    var itemData = itemsTable ? itemsTable.find(function(i){ return i.id === itemId; }) : null;
+    if(itemData && (itemData.is_gift === "FALSE" || itemData.is_gift === false)) continue; // skip non-gift items
+    
+    (function(id, ct, data){
+      var name = data ? data.name : id;
+      choices.push({
+        text: name + " (보유: " + ct + ") 선물하기",
+        onClick: function(){
+          state.inventory[id]--;
+          processGift(heroine, id, location);
+        }
+      });
+    })(itemId, count, itemData);
+  }
+  
+  if(choices.length === 0){
+    toast("선물할 수 있는 종류의 물건이 없습니다.");
+    return;
+  }
+  
+  choices.push({
+    text: "취소",
+    onClick: function(){ renderInteractionChoices(heroine, location); }
+  });
+  
   showChoices(choices);
+}
+
+function processGift(heroine, itemId, location){
+  closeInteractionView();
+  closeLocationSdView();
+  
+  var scene = getTalkSceneByLocation(location);
+  var itemData = itemsTable ? itemsTable.find(function(i){ return i.id === itemId; }) : null;
+  var itemName = itemData ? itemData.name : itemId;
+  
+  var pref = preferencesTable ? preferencesTable.find(function(r){ return r.heroine === heroine && r.item_id === itemId; }) : null;
+  
+  var prefType = pref ? pref.type : "normal"; 
+  var responseText = pref ? pref.response_text : "";
+  var affChange = 2;
+  
+  if(prefType === "like"){
+    affChange = 5;
+  }else if(prefType === "dislike"){
+    affChange = -3;
+  }
+  
+  if(!responseText){
+    if(prefType === "normal"){
+      var fallbacks = dialoguesTable ? dialoguesTable.filter(function(r){ return r.heroine === heroine && r.type === "gift_normal"; }) : [];
+      if(fallbacks.length > 0){
+        responseText = rand(fallbacks).text;
+      }
+    }
+    if(!responseText) responseText = "고마워. 잘 받을게!";
+  }
+  
+  startScript([
+    {
+      who: heroine,
+      scene: scene,
+      text: "어, 이거 내게 주는 거야? ... " + itemName + "이구나."
+    },
+    {
+      who: heroine,
+      scene: scene,
+      text: responseText
+    }
+  ], function(){
+    if(affChange > 0) gainAffection(heroine, affChange);
+    else state.affection[heroine] += affChange; // 하락 적용
+    
+    var sign = affChange > 0 ? "+" : "";
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 " + sign + affChange);
+    enterRoom("선물을 주고 다시 동굴로 복귀했다.");
+  });
+}
+
+function startWalkEvent(heroine, location){
+  if(!spendEnergy(5)) return;
+  closeInteractionView();
+  closeLocationSdView();
+  
+  var scene = getTalkSceneByLocation(location);
+  var aff = state.affection[heroine] || 0;
+  var text = "주변을 함께 걷자 마음이 평화로워진다.";
+  if(aff >= 60) text = "말없이 걸어도 전혀 어색하지 않고 속삭이듯 깊은 대화가 오갔다.";
+  else if(aff >= 30) text = "발걸음을 맞추며 걸으니 제법 친근감이 든다.";
+  
+  startScript([
+    { who: heroine, scene: scene, text: "......(방긋)" },
+    { who: "hwanung", scene: scene, text: text }
+  ], function(){
+    gainAffection(heroine, 3);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +3");
+    advanceAfterAction(); // 시간이 지남
+  });
+}
+
+function startDateEvent(heroine, location){
+  // 기존 startDateEvent 재사용 또는 재작성
+  closeInteractionView();
+  closeLocationSdView();
+  
+  if(!spendEnergy(ACTION_COST.date)) return;
+
+  var datePlace = rand(["숲 깊은 곳", "탁 트인 호수", "조용한 산 중턱"]);
+  var scene = getTalkSceneByLocation(location);
+  
+  startScript([
+    {
+      who: heroine,
+      scene: scene,
+      text: "정말 나랑 단둘이 시간을 보내고 싶은 거야? ...좋아!"
+    },
+    {
+      who: "hwanung",
+      scene: scene,
+      text: names[heroine] + "와(과) 함께 " + datePlace + "에서 특별한 시간을 보냈다."
+    }
+  ], function(){
+    gainAffection(heroine, 8);
+    pushBacklog("SYSTEM", names[heroine] + " 호감도 +8");
+    // 데이트는 2칸 경과
+    state.timeIndex += 1; 
+    advanceAfterAction();
+  });
 }
 
 function locationToScene(location){
@@ -3308,158 +4096,456 @@ function randomSmallTalk(){
 }
 
 function doTownVisit(){
-  openCharacterSelect("town", "village");
+  if(!spendEnergy(10)) return;
+  state.currentLocation = "village";
+  openLocationSdView("village");
 }
 
-function startDateEvent(heroine){
-  if(!spendEnergy(ACTION_COST.date)) return;
-
-  var datePlace = rand(["숲길", "호수", "마을", "신단"]);
-  startScript([
-    {
-      who: "system",
-      scene: "forestday",
-      text: names[heroine] + "에게 데이트를 신청했다.\n약속 장소는 " + datePlace + "."
-    },
-    {
-      who: heroine,
-      scene: "forestday",
-      text: "오늘만큼은 둘만의 시간을 보내자는 듯, 평소보다 가까운 분위기다."
-    },
-    {
-      who: "hwanung",
-      scene: "forestday",
-      text: "둘만의 시간이 길어질수록, 마음의 거리도 조금씩 가까워지는 것 같았다."
-    }
-  ], function(){
-    gainAffection(heroine, 8);
-    pushBacklog("SYSTEM", names[heroine] + " 호감도 +8");
-    advanceAfterAction();
-  });
+function openShop(){
+  var shopItems = itemsTable ? itemsTable.filter(function(i) {
+    return i.is_shop === "TRUE" || i.is_shop === true || i.is_shop === "true";
+  }) : [];
+  
+  if(shopItems.length === 0){
+    toast("상점 주인이 아직 물건을 들여오지 않았다.");
+    doTownVisit();
+    return;
+  }
+  
+  var choices = [];
+  var currentMoney = state.money || 0;
+  
+  for(var i=0; i<shopItems.length; i++){
+    (function(item){
+      var price = parseInt(item.price || "0", 10);
+      var text = item.name + " (" + price + " 엽전)";
+      var disabled = currentMoney < price;
+      
+      choices.push({
+        text: text,
+        disabled: disabled,
+        onClick: function(){
+          state.money -= price;
+          if(!state.inventory) state.inventory = {};
+          if(!state.inventory[item.id]) state.inventory[item.id] = 0;
+          state.inventory[item.id] += 1;
+          
+          toast(item.name + "을(를) 구매했다! (남은 돈: " + state.money + ")");
+          openShop(); // 계속 상점에 머뭄
+        }
+      });
+    })(shopItems[i]);
+  }
+  
+  choices.push({ text: "돌아가기 (엽전 보유량: " + currentMoney + ")", onClick: function(){ openLocationSdView("village"); } });
+  
+  setBackground("village");
+  showChoices(choices);
 }
 
-function getActionCost(action){
-  if(action === "walk") return ACTION_COST.walk;
-  if(action === "explore") return ACTION_COST.explore;
-  if(action === "town") return ACTION_COST.town;
-  if(action === "date") return ACTION_COST.date;
-  return 0;
-}
-
-function getTalkSceneByLocation(location){
-  if(location === "mountain") return "forestsunset";
-  if(location === "shrine") return "palace";
-  return "forestday";
-}
-
-function startTalkAction(action, location, heroine){
-  var cost = getActionCost(action);
-  if(!spendEnergy(cost)) return;
-
-  var scene = getTalkSceneByLocation(location);
-  var place = getLocationLabel(location);
-  state.currentLocation = location;
-  markHeroineSeen(heroine);
-
-  var ev = getTriggeredEvent(action, location, heroine);
-  if(ev){
-    setEventSeen(ev.id);
-    playCutsceneFromCsv(ev.cutscene, function(){
-      gainAffection(heroine, action === "explore" ? 2 : 3);
-      pushBacklog("SYSTEM", names[heroine] + " 호감도 +" + (action === "explore" ? 2 : 3));
-      advanceAfterAction();
-    }).catch(function(err){
-      console.error(err);
-      toast(ev.cutscene + " 컷씬을 불러오지 못했습니다.");
-      startNormalTalk(action, location, heroine, scene, place);
+// ==== 정보상 로직 ====
+function openInfoBroker(){
+  closeLocationSdView();
+  if(!state.seenRumors) state.seenRumors = {};
+  
+  var availableRumors = rumorsTable ? rumorsTable.filter(function(r) {
+    return !state.seenRumors[r.rumor_id];
+  }) : [];
+  
+  if(availableRumors.length === 0){
+    startScript([
+      { who: "system", scene: "village", text: "당분간 떠도는 새로운 소문은 없는 것 같다." }
+    ], function(){
+      openLocationSdView("village");
     });
     return;
   }
-
-  startNormalTalk(action, location, heroine, scene, place);
-}
-
-function startNormalTalk(action, location, heroine, scene, place){
-  var gain = 0;
-  var intro = "";
-
-  if(action === "walk"){
-    gain = (state.timeIndex === 3 || state.timeIndex === 4) ? 4 : 3;
-    intro = getTimeLabel() + "의 " + place + ".\n산책을 하던 환웅은 " + names[heroine] + "와(과) 마주쳤다.";
-  }else if(action === "explore"){
-    gain = 2;
-    intro = getTimeLabel() + "의 " + place + ".\n탐색 도중 " + names[heroine] + "와(과) 조우했다.";
-  }else if(action === "town"){
-    gain = 2;
-    intro = getTimeLabel() + "의 " + place + ".\n마을에서 " + names[heroine] + "를 발견했다.";
+  
+  for(var k = availableRumors.length - 1; k > 0; k--){
+    var j = Math.floor(Math.random() * (k + 1));
+    var tmp = availableRumors[k];
+    availableRumors[k] = availableRumors[j];
+    availableRumors[j] = tmp;
   }
-
-  startScript([
-    {
-      who: "system",
-      scene: scene,
-      text: intro
-    },
-    {
-      who: heroine,
-      scene: scene,
-      text: heroineFlavor(heroine)
-    },
-    {
-      who: "hwanung",
-      scene: scene,
-      text: randomSmallTalk()
-    }
-  ], function(){
-    gainAffection(heroine, gain);
-    pushBacklog("SYSTEM", names[heroine] + " 호감도 +" + gain);
-    advanceAfterAction();
-  });
+  var picked = availableRumors.slice(0, 2);
+  
+  var choices = [];
+  for(var i=0; i<picked.length; i++){
+    (function(r){
+      var targetName = (r.heroine && names[r.heroine]) ? names[r.heroine] + "에 관한 소문 듣기" : "알 수 없는 소문 듣기";
+      choices.push({
+        text: targetName,
+        onClick: function(){
+          if(state.money < 30) {
+            toast("잔돈이 모자란 것 같다.");
+            openLocationSdView("village");
+            return;
+          }
+          state.money -= 30;
+          state.seenRumors[r.rumor_id] = true;
+          
+          startScript([
+            { who: "system", scene: "village", text: "30 엽전을 쥐여주자 이야기꾼이 은밀히 입을 열었다." },
+            { who: "system", scene: "village", text: r.text }
+          ], function(){
+            enterRoom("소문을 전해듣고 동굴로 복귀했다.");
+          });
+        }
+      });
+    })(picked[i]);
+  }
+  choices.push({ text: "돌아가기", onClick: function(){ openLocationSdView("village"); } });
+  
+  setBackground("village");
+  showChoices(choices);
 }
+
+// ==== 공방 로직 ====
+var wsCurrentSlots = [null, null, null, null];
+var $workshopScreen = document.getElementById("workshopScreen");
+
+function openWorkshop() {
+  closeLocationSdView();
+  $workshopScreen.classList.add("open");
+  if(!state.unlockedRecipes) state.unlockedRecipes = {};
+  wsCurrentSlots = [null, null, null, null];
+  renderWorkshop();
+}
+
+function closeWorkshop() {
+  $workshopScreen.classList.remove("open");
+  openLocationSdView("village");
+}
+
+document.getElementById("btnWsClose").addEventListener("click", function(){
+  playSfx("click");
+  closeWorkshop();
+});
+
+function renderWorkshop(){
+  renderWsRecipes();
+  renderWsSlots();
+  renderWsInventory();
+}
+
+function renderWsRecipes(){
+  var list = document.getElementById("wsRecipeList");
+  if(!list) return;
+  list.innerHTML = "";
+  
+  if(!recipesTable) return;
+  
+  var unlockedCount = 0;
+  for(var i=0; i<recipesTable.length; i++){
+    var rx = recipesTable[i];
+    if(state.unlockedRecipes[rx.result_id]){
+      unlockedCount++;
+      var itemData = itemsTable ? itemsTable.find(function(it){ return it.id === rx.result_id; }) : null;
+      if(!itemData) continue;
+      
+      var d = document.createElement("div");
+      d.className = "wsRecipeItem";
+      var imgSrc = "assets/item/" + (itemData.img_id || "default_item") + ".png";
+      d.innerHTML = '<img src="' + imgSrc + '" onerror="this.style.display=\'none\'"><span>' + itemData.name + '</span>';
+      
+      (function(recipe){
+        d.addEventListener("click", function(){ tryQuickCraft(recipe); });
+      })(rx);
+      
+      list.appendChild(d);
+    }
+  }
+  
+  if(unlockedCount === 0){
+    list.innerHTML = "<div style='color:#aaa; text-align:center; padding:20px;'>불명</div>";
+  }
+}
+
+function renderWsSlots(){
+  for(var i=0; i<4; i++){
+    var sl = document.querySelector('.wsSlot[data-idx="'+i+'"]');
+    if(!sl) continue;
+    sl.innerHTML = "";
+    var it = wsCurrentSlots[i];
+    if(it){
+      var itemData = itemsTable ? itemsTable.find(function(x){ return x.id === it; }) : null;
+      if(itemData){
+        var img = document.createElement("img");
+        img.src = "assets/item/" + (itemData.img_id || "default_item") + ".png";
+        img.onerror = function(){ this.style.display='none'; };
+        sl.appendChild(img);
+      }
+    }
+    sl.onclick = (function(idx){
+      return function(){
+        if(wsCurrentSlots[idx]){
+          var returningId = wsCurrentSlots[idx];
+          if(!state.inventory[returningId]) state.inventory[returningId] = 0;
+          state.inventory[returningId]++;
+          wsCurrentSlots[idx] = null;
+          playSfx("click");
+          renderWorkshop();
+        }
+      };
+    })(i);
+  }
+}
+
+function renderWsInventory(){
+  var inv = document.getElementById("wsInventory");
+  if(!inv) return;
+  inv.innerHTML = "";
+  
+  var hasItems = false;
+  for(var id in state.inventory){
+    if(state.inventory.hasOwnProperty(id) && state.inventory[id] > 0){
+      hasItems = true;
+      var itemData = itemsTable ? itemsTable.find(function(x){ return x.id === id; }) : null;
+      if(!itemData) continue;
+      
+      var d = document.createElement("div");
+      d.className = "wsInvItem";
+      var imgSrc = "assets/item/" + (itemData.img_id || "default_item") + ".png";
+      d.innerHTML = '<img src="' + imgSrc + '" onerror="this.style.display=\'none\'"><span>' + itemData.name + '</span><span class="qty">x' + state.inventory[id] + '</span>';
+      
+      (function(itemId){
+        d.onclick = function(){
+          var emptyIdx = wsCurrentSlots.indexOf(null);
+          if(emptyIdx !== -1){
+            state.inventory[itemId]--;
+            wsCurrentSlots[emptyIdx] = itemId;
+            playSfx("click");
+            renderWorkshop();
+          }else{
+            setWsMessage("빈 슬롯이 없습니다.");
+          }
+        };
+      })(id);
+      
+      inv.appendChild(d);
+    }
+  }
+  if(!hasItems) inv.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#777; padding-top:20px;'>가진 물건이 없습니다.</div>";
+}
+
+function setWsMessage(msg){
+  var box = document.getElementById("wsMsgBox");
+  if(box) box.textContent = msg;
+}
+
+document.getElementById("btnCraft").addEventListener("click", function(){
+  playSfx("click");
+  if(!spendEnergy(5)){
+    setWsMessage("행동력이 부족합니다!");
+    return;
+  }
+  
+  var usedItems = wsCurrentSlots.filter(function(x){ return x !== null; });
+  if(usedItems.length === 0){
+    setWsMessage("슬롯에 재료를 올려주세요. (실패로 행동력은 감소했습니다)");
+    return;
+  }
+  
+  var foundRecipe = null;
+  for(var i=0; i<recipesTable.length; i++){
+    var rx = recipesTable[i];
+    var reqs = [];
+    if(rx.mat1) reqs.push(rx.mat1);
+    if(rx.mat2) reqs.push(rx.mat2);
+    if(rx.mat3) reqs.push(rx.mat3);
+    if(rx.mat4) reqs.push(rx.mat4);
+    
+    var sortedUsed = usedItems.slice().sort();
+    var sortedReqs = reqs.slice().sort();
+    
+    if(sortedUsed.length === sortedReqs.length && sortedUsed.every(function(val, index) { return val === sortedReqs[index]; })){
+      foundRecipe = rx;
+      break;
+    }
+  }
+  
+  setWsMessage("제작 중...");
+  var btn = document.getElementById("btnCraft");
+  btn.disabled = true;
+  
+  setTimeout(function(){
+    btn.disabled = false;
+    for(var i=0; i<4; i++) wsCurrentSlots[i] = null;
+    
+    if(foundRecipe){
+      var resultItem = itemsTable.find(function(it){ return it.id === foundRecipe.result_id; });
+      var rName = resultItem ? resultItem.name : foundRecipe.result_id;
+      
+      if(!state.inventory[foundRecipe.result_id]) state.inventory[foundRecipe.result_id] = 0;
+      state.inventory[foundRecipe.result_id]++;
+      state.unlockedRecipes[foundRecipe.result_id] = true;
+      
+      showWsResult("성공!", false);
+      setWsMessage(rName + " 제작에 성공했습니다!");
+      playSfx("success"); 
+    } else {
+      showWsResult("실패...", true);
+      setWsMessage("조합이 실패하여 파괴되었습니다.");
+      playSfx("error"); 
+    }
+    renderWorkshop();
+  }, 3000);
+});
+
+function showWsResult(text, isFail){
+  var el = document.getElementById("wsResultText");
+  if(!el) return;
+  el.textContent = text;
+  if(isFail) el.classList.add("fail");
+  else el.classList.remove("fail");
+  
+  el.classList.add("show");
+  setTimeout(function(){
+    el.classList.remove("show");
+  }, 2000);
+}
+
+function tryQuickCraft(recipe){
+  var reqs = [];
+  if(recipe.mat1) reqs.push(recipe.mat1);
+  if(recipe.mat2) reqs.push(recipe.mat2);
+  if(recipe.mat3) reqs.push(recipe.mat3);
+  if(recipe.mat4) reqs.push(recipe.mat4);
+  
+  var countMap = {};
+  for(var i=0; i<reqs.length; i++) countMap[reqs[i]] = (countMap[reqs[i]] || 0) + 1;
+  
+  var canCraft = true;
+  for(var k in countMap){
+    if(!state.inventory[k] || state.inventory[k] < countMap[k]){
+      canCraft = false;
+      break;
+    }
+  }
+  
+  if(!canCraft){
+    setWsMessage("재료가 부족하여 빠른 제작을 할 수 없습니다.");
+    return;
+  }
+  if(!spendEnergy(5)){
+    setWsMessage("행동력이 부족합니다!");
+    return;
+  }
+  
+  for(var k in countMap) state.inventory[k] -= countMap[k];
+  if(!state.inventory[recipe.result_id]) state.inventory[recipe.result_id] = 0;
+  state.inventory[recipe.result_id]++;
+  
+  var resultItem = itemsTable.find(function(it){ return it.id === recipe.result_id; });
+  var rName = resultItem ? resultItem.name : recipe.result_id;
+  
+  playSfx("click");
+  showWsResult("성공!", false);
+  setWsMessage("[빠른 제작] " + rName + " 아이템을 획득했습니다!");
+  renderWorkshop();
+}
+
 
 function startEndingSummary(){
   var sorted = heroineKeys.slice().sort(function(a, b){
     return state.affection[b] - state.affection[a];
   });
-  var top = sorted[0];
-  var second = sorted[1];
+  
+  var top1 = sorted[0];
+  var top2 = sorted[1];
+  var top3 = sorted[2];
+  
+  // 100 이상인 히로인 목록 추출 (대기열 작성용)
+  var heroinesOver100 = sorted.filter(function(k){
+    return state.affection[k] >= 100;
+  });
 
-  startScript([
+  var summaryLines = [
     {
       who: "system",
       scene: "palace",
-      text:
-        "21일이 끝났다.\n"
-        + "가장 가까워진 인연은 " + names[top] + "이었다.\n"
-        + "(" + state.affection[top] + " / 2위 " + names[second] + " " + state.affection[second] + ")",
-      effects:["shakeUI"]
+      text: "21일의 기한이 모두 끝났다.\n정착의 첫걸음을 떼기 위해 많은 노력을 했고...",
     },
     {
       who: "system",
       scene: "palace",
-      text:
-        "이제 이 데이터를 바탕으로 엔딩 분기나 고백 이벤트를 이어서 붙이면 된다.\n"
-        + "현재는 루프/시간/행동 시스템까지 구현된 상태다."
+      text: "가장 인연이 깊었던 사람들을 돌이켜보자.\n"
+          + "1위: " + names[top1] + " (호감도 " + state.affection[top1] + ")\n"
+          + "2위: " + names[top2] + " (호감도 " + state.affection[top2] + ")\n"
+          + "3위: " + names[top3] + " (호감도 " + state.affection[top3] + ")"
     }
-  ], function(){
-    showChoices([
-      {
-        text: "타이틀로 돌아가기",
-        onClick: function(){
-          showTitle();
-          refreshRoom();
-        }
-      },
-      {
-        text: "처음부터 다시 시작",
-        onClick: function(){
-          resetGame();
-          hideTitle();
-          enterRoom("새로운 하루가 시작된다.");
-        }
-      }
-    ]);
+  ];
+  
+  // 1. 공통 전야제 (ending_intro 스크립트가 있다면 재생, 없으면 기본 summaryLines 재생)
+  playCutsceneFromCsv("ending_intro", function(){
+    buildEndingQueue(heroinesOver100);
+  }).catch(function(err){
+    console.warn("ending_intro 컷씬 없음. 기본 요약 출력.");
+    startScript(summaryLines, function(){
+      buildEndingQueue(heroinesOver100);
+    });
   });
+}
+
+function buildEndingQueue(heroines){
+  state.endingQueue = [];
+  
+  if(heroines.length === 0){
+    state.endingQueue.push("normal_ending");
+  } else {
+    // 1명 이상일 경우 각 개별 엔딩 추가
+    for(var i=0; i<heroines.length; i++){
+      state.endingQueue.push("ending_" + heroines[i]);
+    }
+    // 2명 이상일 경우 마지막에 하렘 엔딩 추가
+    if(heroines.length >= 2){
+      state.endingQueue.push("harem_ending");
+    }
+  }
+  
+  playNextEnding();
+}
+
+function playNextEnding(){
+  if(!state.endingQueue || state.endingQueue.length === 0){
+    showTitleChoice();
+    return;
+  }
+  
+  var nextCutscene = state.endingQueue.shift(); // 큐에서 하나 꺼냄
+  
+  playCutsceneFromCsv(nextCutscene, function(){
+    playNextEnding();
+  }).catch(function(err){
+    console.error(err);
+    toast(nextCutscene + " 컷씬 로딩 실패. 임시 텍스트 출력 후 다음으로 넘어갑니다.");
+    
+    startScript([
+      { who: "system", scene: "palace", text: "[" + nextCutscene + " 관련 연출이 재생되었습니다.]" }
+    ], function(){
+      playNextEnding();
+    });
+  });
+}
+
+function showTitleChoice(){
+  showChoices([
+    {
+      text: "타이틀로 돌아가기",
+      onClick: function(){
+        showTitle();
+        refreshRoom();
+      }
+    },
+    {
+      text: "처음부터 다시 시작",
+      onClick: function(){
+        resetGame();
+        hideTitle();
+        enterRoom("새로운 하루가 시작된다.");
+      }
+    }
+  ]);
 }
 
 var currentCodexKey = heroineKeys[0];
