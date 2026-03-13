@@ -886,20 +886,28 @@
 
     .interactGreeting{
       margin-top:20px;
-      background:rgba(12,16,26,.85);
-      border:1px solid rgba(255,255,255,.15);
-      border-radius:16px;
-      padding:20px;
-      font-size:18px;
-      line-height:1.6;
-      box-shadow:0 10px 30px rgba(0,0,0,.5);
+      background:rgba(12,16,30,.80);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:24px;
+      padding:24px 28px;
+      font-size:22px;
+      line-height:1.7;
+      box-shadow:0 16px 40px rgba(0,0,0,.45);
+      position:relative;
+      min-height:220px;
     }
 
     .interactGreeting .name{
+      position:absolute;
+      top:-20px;
+      left:24px;
+      background:#f2f6ff;
+      color:#0a0e19;
+      padding:8px 18px;
+      border-radius:12px;
       font-weight:900;
-      color:var(--accent);
-      margin-bottom:8px;
-      font-size:20px;
+      font-size:18px;
+      box-shadow:0 6px 16px rgba(0,0,0,.3);
     }
 
     /* ===== Death Scene ===== */
@@ -1539,6 +1547,23 @@
       <div class="wsResultText" id="wsResultText">성공!</div>
 		</div>
 
+		<!-- Inventory Modal -->
+		<div class="modal" id="inventoryModal">
+		  <div class="modalBox" style="width:min(600px, 90vw);height:min(70vh, 600px);">
+			<div class="modalHead">
+			  <div class="modalHeadLeft">
+				<div><b>소지품 확인</b> <span class="kbd">Esc=닫기</span></div>
+			  </div>
+			  <div class="modalHeadRight">
+				<div class="btn" id="btnInventoryClose">Close</div>
+			  </div>
+			</div>
+			<div class="modalBody">
+			  <div class="wsInventory" id="inventoryList" style="padding:0; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));"></div>
+			</div>
+		  </div>
+		</div>
+
 		<!-- Death Screen -->
 		<div class="deathScreen" id="deathScreen">
 		  <img class="deathBg" id="deathBg" alt="death scene">
@@ -2023,6 +2048,10 @@ var $hudRight = document.querySelector(".hudRight");
 
 var $saveLoadModal = document.getElementById("saveLoadModal");
 var $saveLoadTitle = document.getElementById("saveLoadTitle");
+var $inventoryModal = document.getElementById("inventoryModal");
+var $inventoryList = document.getElementById("inventoryList");
+var $btnInventoryClose = document.getElementById("btnInventoryClose");
+if($btnInventoryClose) $btnInventoryClose.onclick = function(){ $inventoryModal.classList.remove("open"); };
 var $saveLoadGrid = document.getElementById("saveLoadGrid");
 var $btnSaveLoadClose = document.getElementById("btnSaveLoadClose");
 
@@ -2524,20 +2553,21 @@ function injectGameUiCss(){
   + ".roomHotspot:hover{transform:translateY(-2px);background:rgba(18,26,44,.42);}"
   + ".hotspotLabel{padding:10px 14px;font-size:14px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.35);white-space:pre-line;text-align:center;}"
   + ".bedSpot{right:10vw;bottom:31vh;width:min(220px,24vw);height:min(120px,13vw);}"
-  + ".entranceSpot{left:7vw;top:26vh;width:min(220px,24vw);height:min(320px,34vh);border-radius:24px;}"
+  + ".entranceSpot{left:3vw;top:26vh;width:min(220px,24vw);height:min(320px,34vh);border-radius:24px;}"
+  + ".inventorySpot{left:3vw;bottom:10vh;width:min(180px,20vw);height:min(100px,12vw);border-radius:20px;}"
   + ".roomInfoCard{position:absolute;right:3vw;top:86px;pointer-events:none;z-index:12;padding:12px 14px;border-radius:18px;"
   + "border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.28);backdrop-filter:blur(8px);min-width:250px;}"
   + ".roomInfoTitle{font-weight:900;margin-bottom:8px;font-size:14px;}"
   + ".roomInfoBody{font-size:13px;line-height:1.65;color:rgba(242,246,255,.8);white-space:pre-line;}"
   + ".sdHint{position:absolute;left:50%;transform:translateX(-50%);bottom:30vh;z-index:11;pointer-events:none;"
   + "padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);font-size:12px;color:rgba(242,246,255,.7);}"
-  + "@media (max-width:720px){.entranceSpot{left:4vw;top:23vh;width:28vw;height:28vh}.bedSpot{right:5vw;bottom:31vh;width:28vw;height:11vh}.roomInfoCard{right:4vw;top:92px;min-width:auto;width:44vw}}";
+  + "@media (max-width:720px){.entranceSpot{left:2vw;top:23vh;width:28vw;height:28vh}.bedSpot{right:5vw;bottom:31vh;width:28vw;height:11vh}.roomInfoCard{right:4vw;top:92px;min-width:auto;width:44vw}.inventorySpot{left:2vw;bottom:8vh;width:26vw;height:12vw}}";
   var style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
 }
 
-var roomLayer, bedSpot, entranceSpot, roomInfoCard, roomInfoBody, sdHint;
+var roomLayer, bedSpot, entranceSpot, inventorySpot, roomInfoCard, roomInfoBody, sdHint;
 function ensureRoomUi(){
   if(roomLayer) return;
 
@@ -2548,6 +2578,10 @@ function ensureRoomUi(){
   entranceSpot = document.createElement("button");
   entranceSpot.className = "roomHotspot entranceSpot";
   entranceSpot.innerHTML = '<div class="hotspotLabel">동굴 입구\n행동 선택</div>';
+
+  inventorySpot = document.createElement("button");
+  inventorySpot.className = "roomHotspot inventorySpot";
+  inventorySpot.innerHTML = '<div class="hotspotLabel">소지품 관리\n(인벤토리)</div>';
 
   bedSpot = document.createElement("button");
   bedSpot.className = "roomHotspot bedSpot";
@@ -2564,9 +2598,17 @@ function ensureRoomUi(){
 
   roomLayer.appendChild(entranceSpot);
   roomLayer.appendChild(bedSpot);
+  roomLayer.appendChild(inventorySpot);
   roomLayer.appendChild(roomInfoCard);
   roomLayer.appendChild(sdHint);
   $stage.appendChild(roomLayer);
+
+  inventorySpot.addEventListener("click", function(e){
+    e.stopPropagation();
+    playSfx("click");
+    if(state.script) return;
+    openStandaloneInventory();
+  });
 
   entranceSpot.addEventListener("click", function(e){
     e.stopPropagation();
@@ -2760,6 +2802,8 @@ function applySlots(slots){
 var pillTime = null;
 var pillEnergy = null;
 
+var pillMoney = null;
+var pillLocation = null;
 function ensureHudExtras(){
   if(pillTime && pillEnergy) return;
   pillTime = document.createElement("div");
@@ -2769,8 +2813,17 @@ function ensureHudExtras(){
   pillEnergy = document.createElement("div");
   pillEnergy.className = "pill";
   pillEnergy.innerHTML = '행동력 <b id="energyValue">100 / 100</b>';
+  
+  pillMoney = document.createElement("div");
+  pillMoney.className = "pill";
+  pillMoney.innerHTML = '지닌 돈: <b id="moneyValue">0</b>냥';
+  
+  pillLocation = document.createElement("div");
+  pillLocation.className = "pill";
+  pillLocation.innerHTML = '<b id="locValue">거처</b>';
 
   $hudLeft.innerHTML = "";
+  $hudLeft.appendChild(pillLocation);
   $hudLeft.appendChild((function(){
     var d = document.createElement("div");
     d.className = "pill";
@@ -2779,6 +2832,7 @@ function ensureHudExtras(){
   })());
   $hudLeft.appendChild(pillTime);
   $hudLeft.appendChild(pillEnergy);
+  $hudLeft.appendChild(pillMoney);
 
   $day = document.getElementById("day");
 }
@@ -2788,9 +2842,40 @@ function updateHud(){
   $day.textContent = String(state.day);
   var t = document.getElementById("timeValue");
   var e = document.getElementById("energyValue");
+  var m = document.getElementById("moneyValue");
+  var l = document.getElementById("locValue");
   if(t) t.textContent = getTimeLabel();
   if(e) e.textContent = String(state.energy) + " / " + String(state.maxEnergy);
+  if(m) m.textContent = String(state.money || 0);
+  if(l){
+    if(state.currentLocation === "room") l.textContent = "환웅의 거처";
+    else l.textContent = getLocationLabel(state.currentLocation);
+  }
   updateRoomInfo();
+}
+
+function openStandaloneInventory(){
+  if(!$inventoryList) return;
+  $inventoryList.innerHTML = "";
+  var keys = Object.keys(state.inventory || {});
+  var count = 0;
+  keys.forEach(function(itemId){
+    var qty = state.inventory[itemId];
+    if(qty <= 0) return;
+    count++;
+    var it = itemsTable ? itemsTable.find(function(r){return r.id === itemId}) : null;
+    var name = it ? it.name : itemId;
+    var imgRef = it && it.img_id ? it.img_id : ("item_" + itemId);
+    var src = assets.icon && assets.icon[imgRef] ? assets.icon[imgRef] : "assets/icon/default_item.png";
+    var div = document.createElement("div");
+    div.className = "wsInvItem";
+    div.innerHTML = '<img src="' + src + '"><span>' + escapeHtml(name) + '</span><div class="qty">x' + qty + '</div>';
+    $inventoryList.appendChild(div);
+  });
+  if(count === 0){
+    $inventoryList.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#aaa;">가진 물건이 없습니다.</div>';
+  }
+  if($inventoryModal)$inventoryModal.classList.add("open");
 }
 
 /* ============================================================================
@@ -3549,7 +3634,7 @@ function openActionMenu(){
       onClick: function(){ openLocationMenu("locview"); }
     },
     {
-      text: "마을 방문 -10",
+      text: "마을가기 (시설물)",
       onClick: function(){ doTownVisit(); }
     },
     {
@@ -3570,7 +3655,7 @@ function openLocationMenu(mode){
     { text: "호수", onClick: function(){ handleLocationSelect(mode, "lake"); } },
     { text: "들판", onClick: function(){ handleLocationSelect(mode, "field"); } },
     { text: "산", onClick: function(){ handleLocationSelect(mode, "mountain"); } },
-    { text: "마을", onClick: function(){ handleLocationSelect(mode, "village"); } },
+    { text: "마을(히로인 찾기)", onClick: function(){ handleLocationSelect(mode, "village"); } },
     { text: "신단", onClick: function(){ handleLocationSelect(mode, "shrine"); } },
     { text: "돌아가기", onClick: function(){ openActionMenu(); } }
   ]);
@@ -3586,12 +3671,34 @@ function handleLocationSelect(mode, location){
 
 function doExploreLocation(location) {
   if(!spendEnergy(30)) return;
+  state.currentLocation = location;
   
-  var earnedMoney = Math.floor(Math.random() * 51) + 10; // 10 ~ 60 엽전
-  state.money += earnedMoney;
+  var rnd = Math.random();
+  if(rnd < 0.4){
+    var foundObj = Math.floor(Math.random() * 50) + 10;
+    state.money += foundObj;
+    toast("탐색 중 엽전 " + foundObj + "냥을 주웠다!");
+    updateHud();
+  } else {
+    var exploreItems = itemsTable ? itemsTable.filter(function(it) {
+      if(it.is_explore !== "TRUE" && it.is_explore !== true && String(it.is_explore).toLowerCase() !== "true") return false;
+      if(!it.explore_loc) return false;
+      var locs = it.explore_loc.split(',').map(function(s){ return s.trim().toLowerCase(); });
+      return locs.includes("all") || locs.includes(location.toLowerCase());
+    }) : [];
+    
+    if(exploreItems.length > 0){
+      var pickedItem = rand(exploreItems);
+      if(!state.inventory[pickedItem.id]) state.inventory[pickedItem.id] = 0;
+      state.inventory[pickedItem.id]++;
+      toast("탐색 중 [" + pickedItem.name + "]을(를) 발견했다!");
+    } else {
+      toast("주변을 둘러보았으나 특별한 것은 없었다.");
+    }
+  }
   
   var placeName = getLocationLabel(location);
-  enterRoom(placeName + "을(를) 탐색하여 " + earnedMoney + " 엽전을 얻었다!");
+  enterRoom(placeName + " 탐색을 마치고 복귀했다.");
   advanceAfterAction();
 }
 
