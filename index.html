@@ -516,7 +516,7 @@
       position: absolute;
       inset: 0;
       display: none;
-      z-index: 60;
+      z-index: 200;
       pointer-events: auto;
     }
 
@@ -886,13 +886,22 @@
       object-fit: cover;
     }
 
-    .locSdContainer {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 10;
+	
+    .locSdContainer{
+      position:absolute;
+      left:0;
+      right:0;
+      top:0;
+      bottom:var(--boxH);
+      pointer-events:none;
+      z-index:10;
+      overflow:hidden;
     }
 
+
+    #mainDialogueWrap.locReuseActive{
+      z-index:60;
+    }
     .locSdContainer>* {
       pointer-events: auto;
     }
@@ -931,56 +940,7 @@
       display: flex;
       gap: 10px;
     }
-
-    /* ===== locScreen 전용 메시지 박스 (dialogue와 동일 규격) ===== */
-    .locMessageWrap {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: var(--boxH);
-      z-index: 15;
-      pointer-events: none;
-    }
-
-    .locMessageBox {
-      height: var(--dlgH);
-      margin: 0 var(--dlgSide) var(--dlgBottom);
-      background: linear-gradient(180deg, rgba(8, 10, 16, .35), rgba(8, 10, 16, .75));
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      backdrop-filter: blur(10px);
-      display: grid;
-      grid-template-rows: auto 1fr;
-      overflow: hidden;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
-      pointer-events: none;
-    }
-
-    .locMessageBox .nameplate {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: var(--dlgNamePad);
-      border-bottom: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(0, 0, 0, .18);
-    }
-
-    .locMessageBox .nameplate .name {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      letter-spacing: .2px;
-    }
-
-    .locMessageBox .textArea {
-      padding: var(--dlgTextPad);
-      font-size: 18px;
-      line-height: 1.7;
-      white-space: pre-wrap;
-    }
-
+	
     /* ===== 마을 시설물 버튼 ===== */
     .facilityCard {
       display: flex;
@@ -1583,7 +1543,7 @@
 
 
         <!-- Dialogue -->
-        <div class="dialogueWrap">
+        <div class="dialogueWrap" id="mainDialogueWrap">
 
           <div class="controlsRow" id="controlsRow">
             <div class="pill">AUTO <b id="autoState">OFF</b></div>
@@ -1606,7 +1566,7 @@
 
           </div>
 
-          <div class="footerRow">
+          <div class="footerRow" id="footerRow">
             <div class="kbd">
               Space=다음 · 1~3=선택 · A=오토 · B=백로그 · M=BGM · ←/→=CG 넘기기
             </div>
@@ -1834,24 +1794,12 @@
         <!-- Interactive Location SD View -->
         <div class="locScreen" id="locScreen">
           <img class="locBg" id="locBg" alt="location background">
-          <div class="locTopMenu">
-            <button class="btn" id="btnLocBack">돌아가기 (행동력 미소모)</button>
-          </div>
+          <div class="locTopMenu"></div>
           <div class="locSdContainer" id="locSdContainer">
             <!-- SD 캐릭터 동적 삽입 -->
           </div>
+        </div>
 
-          <!-- SD View Message Box -->
-          <div class="locMessageWrap">
-            <div id="locMessagePanel" class="locMessageBox">
-              <div class="nameplate">
-                <div class="name">SYSTEM</div>
-              </div>
-              <div class="textArea">
-                누구에게 말을 걸어볼까?
-              </div>
-            </div>
-          </div>
 
         </div>
 
@@ -2003,19 +1951,44 @@
       },
 
       portrait: {
-        rabbit: "assets/portrait/rabbit.png",
-        monkey: "assets/portrait/monkey.png",
-        tiger: "assets/portrait/tiger.png",
-        snake: "assets/portrait/snake.png",
-        cow: "assets/portrait/cow.png",
-        horse: "assets/portrait/horse.png",
-        sheep: "assets/portrait/sheep.png",
-        bear: "assets/portrait/bear.png",
-        rat: "assets/portrait/rat.png",
-        pig: "assets/portrait/pig.png",
-        dog: "assets/portrait/dog.png",
-        chicken: "assets/portrait/chicken.png",
-        dragon: "assets/portrait/dragon.png"
+		bear: "assets/portrait/bear_default.png",
+		bear_SD: "assets/portrait/bear_SD.png",
+
+		rat: "assets/portrait/rat_default.png",
+		rat_SD: "assets/portrait/rat_SD.png",
+
+		cow: "assets/portrait/cow_default.png",
+		cow_SD: "assets/portrait/cow_SD.png",
+
+		tiger: "assets/portrait/tiger_default.png",
+		tiger_SD: "assets/portrait/tiger_SD.png",
+
+		rabbit: "assets/portrait/rabbit_default.png",
+		rabbit_SD: "assets/portrait/rabbit_SD.png",
+
+		dragon: "assets/portrait/dragon_default.png",
+		dragon_SD: "assets/portrait/dragon_SD.png",
+
+		snake: "assets/portrait/snake_default.png",
+		snake_SD: "assets/portrait/snake_SD.png",
+
+		horse: "assets/portrait/horse_default.png",
+		horse_SD: "assets/portrait/horse_SD.png",
+
+		sheep: "assets/portrait/sheep_default.png",
+		sheep_SD: "assets/portrait/sheep_SD.png",
+
+		monkey: "assets/portrait/monkey_default.png",
+		monkey_SD: "assets/portrait/monkey_SD.png",
+
+		chicken: "assets/portrait/chicken_default.png",
+		chicken_SD: "assets/portrait/chicken_SD.png",
+
+		dog: "assets/portrait/dog_default.png",
+		dog_SD: "assets/portrait/dog_SD.png",
+
+		pig: "assets/portrait/pig_default.png",
+		pig_SD: "assets/portrait/pig_SD.png"
       },
 
       bgm: {
@@ -2116,7 +2089,7 @@
     state.eventSeen = freshEventSeen();
     state.heroineSeen = freshHeroineSeen();
 
-    var TIME_NAMES = ["새벽", "아침", "점심", "저녁", "심야"];
+    var TIME_NAMES = ["새벽", "아침", "낮", "저녁", "심야"];
     var TIME_ICONS = ["🌅", "🌄", "☀️", "🌙", "💤"];
 
     var ACTION_COST = {
@@ -2323,6 +2296,7 @@
     var $charR = document.getElementById("charR");
 
     var $dialogueBox = document.getElementById("dialogueBox");
+    var $mainDialogueWrap = document.getElementById("mainDialogueWrap");
     var $speaker = document.getElementById("speaker");
     var $sceneTag = document.getElementById("sceneTag");
     var $text = document.getElementById("text");
@@ -2354,7 +2328,6 @@
     // Location / Interact 
     var $locScreen = document.getElementById("locScreen");
     var $locBg = document.getElementById("locBg");
-    var $btnLocBack = document.getElementById("btnLocBack");
     var $locSdContainer = document.getElementById("locSdContainer");
     var $locTopMenu = document.querySelector(".locTopMenu");
 
@@ -3029,12 +3002,18 @@
 
     function getAvailableHeroines(location) {
       var time = getTimeKey();
+      var normalizedLocation = normalizeSpawnToken(location);
+
+      if (spawnRulesByLocation[normalizedLocation] && Array.isArray(spawnRulesByLocation[normalizedLocation][time])) {
+        return spawnRulesByLocation[normalizedLocation][time].slice();
+      }
+
       var result = [];
       for (var i = 0; i < heroineKeys.length; i++) {
         var key = heroineKeys[i];
         var info = HEROINE_DATABASE[key];
         if (!info || !info.spawn || !info.spawn[time]) continue;
-        if (info.spawn[time].indexOf(location) !== -1) {
+        if (info.spawn[time].indexOf(normalizedLocation) !== -1) {
           result.push(key);
         }
       }
@@ -3592,6 +3571,9 @@
     var questionsTable = [];
     var recipesTable = [];
     var rumorsTable = [];
+    var spawnTable = [];
+    var spawnRulesByLocation = {};
+    var spawnRulesByHeroine = {};
     var gameDataLoaded = false;
 
     function extractGoogleSheetJson(text) {
@@ -3664,6 +3646,8 @@
         questionsTable = await loadGoogleSheetTab("questions").catch(function (e) { return []; });
         recipesTable = await loadGoogleSheetTab("recipes").catch(function (e) { return []; });
         rumorsTable = await loadGoogleSheetTab("rumors").catch(function (e) { return []; });
+        spawnTable = await loadGoogleSheetTab("spawn").catch(function (e) { return []; });
+        buildSpawnRules();
 
         gameDataLoaded = true;
       } catch (err) {
@@ -3678,6 +3662,75 @@
       }
       return cutsceneTable;
     }
+
+    function normalizeSpawnToken(value) {
+      var v = String(value || "").trim().toLowerCase();
+      var timeMap = {
+        "새벽": "dawn",
+        "아침": "morning",
+        "낮": "noon",
+        "저녁": "evening",
+        "밤": "midnight",
+        "심야": "midnight"
+      };
+      var locationMap = {
+        "숲": "forest",
+        "숲길": "forest",
+        "호수": "lake",
+        "들판": "field",
+        "산": "mountain",
+        "마을": "village",
+        "신단": "shrine"
+      };
+      return timeMap[v] || locationMap[v] || v;
+    }
+
+    function splitSpawnCsv(value) {
+      return String(value || "")
+        .split(",")
+        .map(function (part) { return normalizeSpawnToken(part); })
+        .filter(Boolean);
+    }
+
+    function buildSpawnRules() {
+      spawnRulesByLocation = {};
+      spawnRulesByHeroine = {};
+
+      if (!Array.isArray(spawnTable)) return;
+
+      for (var i = 0; i < spawnTable.length; i++) {
+        var row = spawnTable[i] || {};
+        var heroine = normalizeSpawnToken(row.heroine || row.character || row.name);
+        if (!heroine) continue;
+
+        var locations = splitSpawnCsv(row.location || row.locations || row.place);
+        var times = splitSpawnCsv(row.time || row.times);
+
+        if (!locations.length || !times.length) continue;
+
+        if (!spawnRulesByHeroine[heroine]) spawnRulesByHeroine[heroine] = {};
+
+        for (var l = 0; l < locations.length; l++) {
+          var location = locations[l];
+
+          for (var t = 0; t < times.length; t++) {
+            var time = times[t];
+
+            if (!spawnRulesByLocation[location]) spawnRulesByLocation[location] = {};
+            if (!spawnRulesByLocation[location][time]) spawnRulesByLocation[location][time] = [];
+            if (spawnRulesByLocation[location][time].indexOf(heroine) === -1) {
+              spawnRulesByLocation[location][time].push(heroine);
+            }
+
+            if (!spawnRulesByHeroine[heroine][time]) spawnRulesByHeroine[heroine][time] = [];
+            if (spawnRulesByHeroine[heroine][time].indexOf(location) === -1) {
+              spawnRulesByHeroine[heroine][time].push(location);
+            }
+          }
+        }
+      }
+    }
+
 
     function ensureArrayValue(str) {
       if (!str) return null;
@@ -3944,8 +3997,8 @@
     function advanceAfterAction() {
       if (state.timeIndex === 4) {
         state.day += 1;
-        state.timeIndex = 2; // 심야에 행동하면 다음날 점심 기상
-        enterRoom("심야까지 움직인 탓에 다음날 점심이 되어서야 눈을 떴다.");
+        state.timeIndex = 2; // 심야에 행동하면 다음날 낮 기상
+        enterRoom("심야까지 움직인 탓에 다음날 낮이 되어서야 눈을 떴다.");
         return;
       }
 
@@ -4074,6 +4127,7 @@
     function openLocationSdView(location) {
       state.currentLocation = location;
       $locScreen.classList.add("open");
+      if ($mainDialogueWrap) $mainDialogueWrap.classList.add("locReuseActive");
       setBackground(location === "village_facilities" ? "village" : location);
       updateHud();
 
@@ -4114,7 +4168,9 @@
           $locSdContainer.appendChild(card);
         });
 
-        document.querySelector("#locMessagePanel .textArea").textContent = "마을의 어떤 시설을 방문할까?";
+        $speaker.textContent = "SYSTEM";
+        $sceneTag.textContent = "Scene: " + location;
+        $text.textContent = "마을의 어떤 시설을 방문할까?";
         return;
       }
 
@@ -4145,12 +4201,12 @@
         (function (heroine, idx) {
           var sdImg = document.createElement("img");
           sdImg.className = "locSdChar";
-          var sdSrc = assets.char[heroine + "_default"] || getHeroinePortrait(heroine);
+          var sdSrc = assets.portrait[heroine + "_SD"] || getHeroinePortrait(heroine);
           sdImg.src = sdSrc;
 
           var posX = startX + (stepX * idx);
           sdImg.style.left = posX + "%";
-          sdImg.style.bottom = "20px";
+          sdImg.style.bottom = "0px";
 
           sdImg.addEventListener("click", function () {
             playSfx("click");
@@ -4161,11 +4217,14 @@
         })(heroines[i], i);
       }
 
-      document.querySelector("#locMessagePanel .textArea").textContent = "누구에게 말을 걸어볼까?";
+      $speaker.textContent = "SYSTEM";
+      $sceneTag.textContent = "Scene: " + location;
+      $text.textContent = "누구에게 말을 걸어볼까?";
     }
 
     function closeLocationSdView() {
       $locScreen.classList.remove("open");
+      if ($mainDialogueWrap) $mainDialogueWrap.classList.remove("locReuseActive");
     }
 
     function getGreetingLine(heroine) {
@@ -4183,22 +4242,32 @@
       return heroineFlavor(heroine);
     }
 
-    function openInteractionView(heroine, location) {
-      $interactScreen.classList.add("open");
+	function openInteractionView(heroine, location) {
+	  $interactScreen.classList.add("open");
 
-      // 포트레이트
-      $interactPortrait.src = getHeroinePortrait(heroine);
+	  // 메인 대화창 숨기기
+	  if ($mainDialogueWrap) {
+		$mainDialogueWrap.style.display = "none";
+	  }
 
-      // 인사말 
-      $interactName.textContent = names[heroine];
-      $interactText.textContent = getGreetingLine(heroine);
+	  // 포트레이트
+	  $interactPortrait.src = getHeroinePortrait(heroine);
 
-      renderInteractionChoices(heroine, location);
-    }
+	  // 인사말
+	  $interactName.textContent = names[heroine];
+	  $interactText.textContent = getGreetingLine(heroine);
 
-    function closeInteractionView() {
-      $interactScreen.classList.remove("open");
-    }
+	  renderInteractionChoices(heroine, location);
+	}
+
+	function closeInteractionView() {
+	  $interactScreen.classList.remove("open");
+
+	  // 산책용 메인 대화창 다시 보이기
+	  if ($mainDialogueWrap) {
+		$mainDialogueWrap.style.display = "";
+	  }
+	}
 
     function renderInteractionChoices(heroine, location) {
       $interactChoices.innerHTML = "";
@@ -4266,36 +4335,33 @@
     }
 
     function startTalkAction(heroine, location) {
+      if (!spendEnergy(5)) return;
+
       closeInteractionView();
-      closeLocationSdView();
 
       var scene = getTalkSceneByLocation(location);
-      var place = getLocationLabel(location);
       state.currentLocation = location;
       markHeroineSeen(heroine);
 
-      // 특수 컷씬 우선 체크 (우선순위 높음)
-      var ev = getTriggeredEvent("walk", location, heroine); // 편의상 walk로 통일
+      var ev = getTriggeredEvent("walk", location, heroine);
       if (ev) {
         setEventSeen(ev.id);
         playCutsceneFromCsv(ev.cutscene, function () {
           gainAffection(heroine, 5);
           pushBacklog("SYSTEM", names[heroine] + " 호감도 +5");
-          enterRoom("특별한 대화 후 동굴로 돌아왔다.");
+          reopenInteractionAfterTalk(heroine, location, "특별한 대화를 나누었다. 무엇을 더 할까?");
         });
         return;
       }
 
-      // 질문 목록 체크 (구글 시트 questions 테이블)
       if (!state.askedQuestions) state.askedQuestions = {};
 
       var availableQs = questionsTable ? questionsTable.filter(function (q) {
-        return q.heroine === heroine && !state.askedQuestions[q.question_id];
+        var qId = rowValue(q, ["question_id", "id", "질문id", "질문ID"]);
+        return heroineKeyFromRow(q) === heroine && !state.askedQuestions[qId];
       }) : [];
 
-      // 질문이 남아있으면 최대 3개 랜덤 추출 후 선택지 표시
       if (availableQs.length > 0) {
-        // 배열 랜덤 섞기
         for (var k = availableQs.length - 1; k > 0; k--) {
           var j = Math.floor(Math.random() * (k + 1));
           var temp = availableQs[k];
@@ -4309,36 +4375,40 @@
         for (var i = 0; i < pickedQs.length; i++) {
           (function (qObj) {
             choices.push({
-              text: qObj.title || "질문하기",
+              text: rowValue(qObj, ["title", "질문", "제목"]) || "질문하기",
               onClick: function () {
-                state.askedQuestions[qObj.question_id] = true;
-                // 컷씬 아이디를 바로 재생
-                if (qObj.cutscene) {
-                  playCutsceneFromCsv(qObj.cutscene, function () {
+                var questionId = rowValue(qObj, ["question_id", "id", "질문id", "질문ID"]);
+                state.askedQuestions[questionId] = true;
+                var qCutscene = rowValue(qObj, ["cutscene", "컷씬", "scene_id", "이벤트"]);
+                if (qCutscene) {
+                  playCutsceneFromCsv(qCutscene, function () {
                     gainAffection(heroine, 3);
                     pushBacklog("SYSTEM", names[heroine] + " 호감도 +3");
-                    enterRoom("대화 후 동굴로 돌아왔다.");
+                    reopenInteractionAfterTalk(heroine, location, "대화를 마쳤다. 무엇을 더 할까?");
                   }).catch(function (err) {
                     console.error(err);
-                    toast(qObj.cutscene + " 컷씬이 누락되었습니다. 임시대화 출력.");
-                    fallbackTalk(heroine, scene);
+                    toast(qCutscene + " 컷씬이 누락되었습니다. 임시대화 출력.");
+                    fallbackTalk(heroine, location, scene);
                   });
                 } else {
-                  fallbackTalk(heroine, scene);
+                  fallbackTalk(heroine, location, scene);
                 }
               }
             });
           })(pickedQs[i]);
         }
 
-        choices.push({ text: "돌아가기", onClick: function () { enterRoom("아무 말도 하지 않고 돌아왔다."); } });
+        choices.push({
+          text: "돌아가기",
+          onClick: function () {
+            reopenInteractionAfterTalk(heroine, location, "무슨 말을 할지 다시 생각해보기로 했다.");
+          }
+        });
 
         setBackground(scene);
         showChoices(choices);
-
       } else {
-        // 남은 질문이 0개라면 (폴백 일반 대사)
-        fallbackTalk(heroine, scene);
+        fallbackTalk(heroine, location, scene);
       }
     }
 
@@ -5004,27 +5074,31 @@
     var currentCodexKey = heroineKeys[0];
 
     function spawnTextForHeroine(key) {
-      var info = HEROINE_DATABASE[key];
-      if (!info || !info.spawn) return "출몰 정보 없음";
-
       var order = ["dawn", "morning", "noon", "evening", "midnight"];
       var labelMap = {
         dawn: "새벽",
         morning: "아침",
-        noon: "점심",
+        noon: "낮",
         evening: "저녁",
         midnight: "심야"
       };
 
+      var spawnSource = spawnRulesByHeroine[key];
+      if (!spawnSource) {
+        var info = HEROINE_DATABASE[key];
+        spawnSource = info ? info.spawn : null;
+      }
+      if (!spawnSource) return "출몰 정보 없음";
+
       var lines = [];
       for (var i = 0; i < order.length; i++) {
         var t = order[i];
-        var arr = info.spawn[t] || [];
+        var arr = Array.isArray(spawnSource[t]) ? spawnSource[t] : [];
         if (!arr.length) continue;
         var text = arr.map(function (loc) { return getLocationLabel(loc); }).join(", ");
         lines.push("[" + labelMap[t] + "] " + text);
       }
-      return lines.join(", ");
+      return lines.length ? lines.join(", ") : "출몰 정보 없음";
     }
 
     function renderCodexList() {
